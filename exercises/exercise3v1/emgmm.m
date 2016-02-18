@@ -2,7 +2,7 @@ clear all
 close all
 
 %% Load data
-load clusterdata2d % gives 'data' -- also try with other datasets!
+load clusterdata3d % gives 'data' -- also try with other datasets!
 [N, D] = size(data);
 
 %% Initialize parameters
