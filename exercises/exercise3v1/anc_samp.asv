@@ -1,0 +1,27 @@
+%% Define distribution
+mu = {[1, 1], [-4, 3]};
+Sigma = {2*eye(2), 4*eye(2)};
+pi_k = [0.3, 0.7];
+K = 2;
+
+%% Plot distribution
+[X, Y] = meshgrid(linspace(-12, 7, 100), linspace(-6, 9, 100));
+XY = [X(:), Y(:)];
+Z = zeros(size(X));
+for k = 1:K
+  Z(:) = Z(:) + pi_k(k) * mvnpdf(XY, mu{k}, Sigma{k});
+end % for
+contour(X, Y, Z)
+
+%% Sample from distribution
+N = 500;
+samples = NaN(N, 2);
+for n = 1:N
+   nb1 = sample_gaussian(mu(1,1), Sigma(1,1), 1);
+   nb2 = sample_gaussian(mu(2,2), Sigma(1,1), 1);
+  samples(n, :) = ; % XXX: ACTUALLY DRAW A SAMPLE HERE!!!
+end % for
+hold on
+plot(samples(:, 1), samples(:, 2), '.');
+hold off
+
