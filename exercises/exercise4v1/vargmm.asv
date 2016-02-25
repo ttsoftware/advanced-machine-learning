@@ -66,7 +66,7 @@ for iter = 1:max_iter
   end
 
   %% Variational M-step
-  % XXX: FILL ME IN
+  % XXX: FILL ME IN!
 
   
   
@@ -79,6 +79,7 @@ for iter = 1:max_iter
       
   end
   
+  S = zeros(K,1);
   
   for k=1:K
         x_bar = zeros(1,D);
@@ -87,15 +88,14 @@ for iter = 1:max_iter
       end
       x_bar = x_bar / Nk(1,k);
       
-      S= zeros(D,D);
       for  n= 1:N
-         S = S + r(n,k) * (data(n,:) - x_bar)' * (data(n,:) - x_bar); 
+         S(k) = S(k) + r(n,k) * (data(n,:) - x_bar) * (data(n,:) - x_bar)'; 
       end
-      S = S / Nk(1,k);
+      S(k) = S(k) / Nk(1,k);
       alpha_k(k) = alpha0 + Nk(1,k);
       beta_k(k) = beta0 + Nk(1,k);
       m_k{k} = (beta0 * m0+ Nk(1,k) * x_bar)/beta_k(k);
-      W_k{k} = pinv(pinv(W0) + Nk(1,k) * S + (beta0 * Nk(1,k))/(beta0 + Nk(1,k)) * (x_bar - m0)' * (x_bar - m0));
+      W_k{k} = pinv(pinv(W0) + Nk(1,k) * S(k) + (beta0 * Nk(1,k))/(beta0 + Nk(1,k)) * (x_bar - m0) * (x_bar(k) - m0)');
       v_k(k) = v0 + Nk(1,k);
   end
 

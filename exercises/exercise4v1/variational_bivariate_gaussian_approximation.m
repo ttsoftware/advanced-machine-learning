@@ -12,6 +12,7 @@ Sigma = inv(Lambda);
 %% without using the closed-form solution (for illustration).
 m1 = randn();
 m2 = randn();
+
 max_iter = 10;
 for iter = 1:max_iter
   %% First we plot the true Gaussian distribution
@@ -25,6 +26,8 @@ for iter = 1:max_iter
   pause(1)
 
   %% Now we update the factorized estimate
-  m1 = NaN; % XXX: FILL ME IN!
-  m2 = NaN; % XXX: FILL ME IN!
+  m1 = mu(1,1) - pinv(Lambda(1,1)) * Lambda(1,2) * (m2 - mu(2,1)); % XXX: FILL ME IN!
+  m2 = mu(2,1) - pinv(Lambda(2,2)) * Lambda(2,1) * (m1 - mu(1,1)); % XXX: FILL ME IN!
+
+  
 end % for

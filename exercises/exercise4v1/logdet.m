@@ -1,5 +1,5 @@
 function ld = logdet(M)
-  if (isdiag(M))
+  if (false)
     ld = sum(log(diag(M)));
   else
     try
