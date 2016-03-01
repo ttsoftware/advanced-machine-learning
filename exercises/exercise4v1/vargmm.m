@@ -23,82 +23,79 @@ beta_k = repmat(beta0 + N/K, [1, K]); % 1xK
 alpha_k = repmat(alpha0 + N/K, [1, K]); % 1xK
 v_k = repmat(v0 + N/K, [1, K]); % 1xK
 for k = 1:K
-  % Let m_k be a random data point:
-  m_k{k} = data(randi(N), :); % 1xD
-  % Let W_k be the mean of the Wishart prior:
-  W_k{k} = v0*W0; % DxD
+    % Let m_k be a random data point:
+    m_k{k} = data(randi(N), :); % 1xD
+    % Let W_k be the mean of the Wishart prior:
+    W_k{k} = v0*W0; % DxD
 end % for
 Nk = zeros(1, K) / K; % 1xK
-
-
 
 %% Loop until you're happy
 max_iter = 100;
 for iter = 1:max_iter
-  %% Variational E-step
-  % XXX: FILL ME IN!
-  
-  p =zeros(N,K);
-  r = zeros(N,K);
-  for k = 1:K
-      E_var = 0;
-      for i=1:D
-          E_var = E_var + digamma((v_k(k)+1-i)/2);
-      end
-      
-      alpha_hat = sum(alpha_k);
-      E_var = E_var + D * log(2) + logdet(W_k{k});
-      E_pi = digamma(alpha_k(k)) - digamma(alpha_hat);
-      
-      for n = 1:N
-        E_mu_lambda = D / (beta_k(k)) + v_k(k) * (data(n,:) - m_k{k}) * W_k{k} * (data(n,:) - m_k{k})';
-        p(n,k) = E_pi + 0.5 * E_var - D/2 * log(2*pi) - 0.5 * E_mu_lambda;
-          
-        p_n_j = 0;
-        for j=1:K
-            p_n_j = p_n_j + exp(p(n,j) - max(p(n,:)));
+    %% Variational E-step
+    % XXX: FILL ME IN!
+    
+    p =zeros(N,K);
+    r = zeros(N,K);
+    for k = 1:K
+        E_var = 0;
+        for i=1:D
+            E_var = E_var + digamma((v_k(k)+1-i)/2);
         end
         
-        r(n,k) = exp(p(n,k) - max(p(n,:))) / p_n_j;
-      end    
-      
-      
-  end
-
-  %% Variational M-step
-  % XXX: FILL ME IN
-
-  
-  
-  for k=1:K
-     
-      Nk(1,k) = 0;
-      for n=1:N
-          Nk(1,k) = Nk(1,k) + r(n,k); 
-      end
-      
-  end
-  
-  
-  for k=1:K
+        alpha_hat = sum(alpha_k);
+        E_var = E_var + D * log(2) + logdet(W_k{k});
+        E_pi = digamma(alpha_k(k)) - digamma(alpha_hat);
+        
+        for n = 1:N
+            E_mu_lambda = D * pinv(beta_k(k)) + v_k(k) * (data(n,:) - m_k{k}) * W_k{k} * (data(n,:) - m_k{k})';
+            p(n,k) = E_pi + 0.5 * E_var - (D/2) * log(2*pi) - 0.5 * E_mu_lambda;
+        end
+        
+    end
+    
+    for n=1:N
+        p_n = 0;
+        for k=1:K
+            p_n = p_n + exp(p(n,k) - max(p(n,:)));
+        end
+        
+        for k=1:K
+            r(n,k) = exp(p(n,k) - max(p(n,:))) / p_n;
+        end
+    end
+    
+    %% Variational M-step
+    % XXX: FILL ME IN
+    
+    for k=1:K
+        Nk(1,k) = 0;
+        for n=1:N
+            Nk(1,k) = Nk(1,k) + r(n,k);
+        end
+    end
+    
+    for k=1:K
         x_bar = zeros(1,D);
-      for n=1:N
-         x_bar = x_bar + r(n,k) * data(n,:);
-      end
-      x_bar = x_bar / Nk(1,k);
-      
-      S= zeros(D,D);
-      for  n= 1:N
-         S = S + r(n,k) * (data(n,:) - x_bar)' * (data(n,:) - x_bar); 
-      end
-      S = S / Nk(1,k);
-      alpha_k(k) = alpha0 + Nk(1,k);
-      beta_k(k) = beta0 + Nk(1,k);
-      m_k{k} = (beta0 * m0+ Nk(1,k) * x_bar)/beta_k(k);
-      W_k{k} = pinv(pinv(W0) + Nk(1,k) * S + (beta0 * Nk(1,k))/(beta0 + Nk(1,k)) * (x_bar - m0)' * (x_bar - m0));
-      v_k(k) = v0 + Nk(1,k);
-  end
-
+        for n=1:N
+            x_bar = x_bar + r(n,k) * data(n,:);
+        end
+        x_bar = x_bar / Nk(1,k);
+        
+        S = zeros(D,D);
+        for  n= 1:N
+            S = S + r(n,k) * (data(n,:) - x_bar)' * (data(n,:) - x_bar);
+        end
+        S = S / Nk(1,k);
+        
+        alpha_k(k) = alpha0 + Nk(1,k);
+        beta_k(k) = beta0 + Nk(1,k);
+        m_k{k} = (beta0 * m0+ Nk(1,k) * x_bar)/beta_k(k);
+        W_k{k} = pinv(pinv(W0) + Nk(1,k) * S + (beta0 * Nk(1,k))/(beta0 + Nk(1,k)) * (x_bar - m0)' * (x_bar - m0));
+        v_k(k) = v0 + Nk(1,k);
+    end
+    
 end % for
 
 %% Plot data with distribution (we show expected distribution)
@@ -106,9 +103,9 @@ figure
 plot(data(:, 1), data(:, 2), '.');
 hold on
 for k = 1:K
-  if (Nk(k) > 0)
-    plot_normal(m_k{k}, pinv(v_k(k) * (W_k{k})), 'linewidth', 2);
-  end % if
+    if (Nk(k) > 0)
+        plot_normal(m_k{k}, pinv(v_k(k) * (W_k{k})), 'linewidth', 2);
+    end % if
 end % for
 hold off
 
