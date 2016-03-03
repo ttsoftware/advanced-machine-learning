@@ -17,7 +17,13 @@ function new_state = predict_state(state, weights, location, orientation, t)
   end % if
   
   %% Add true motion and noise to particles --- XXX: FILL ME IN
-  new_location = NaN; % (num_particles)x2
+  new_location = zeros(size(state));
+  for l=1:num_particles
+      z = rand();
+      cs = cumsum(weights);
+      k = find(cs>= z, 1);
+      new_location(l,:) =  sample_gaussian(norm(state(k,:) + delta_location),1, 2)'; % (num_particles)x2
+  end
   if (D == 3)
     new_orientation = NaN; % (num_particles)x1
   end % if

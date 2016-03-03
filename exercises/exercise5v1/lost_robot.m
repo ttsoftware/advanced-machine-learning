@@ -41,7 +41,10 @@ for t = 1:num_time_steps
   %%%%% MEASURE
   [landmark_idx, distance, angle] = observe_landmark(true_location, true_orientation, landmarks);
   lm = landmarks(landmark_idx, :); % 1x2
-  weights = NaN; % (num_particles)x1 --- XXX: DO THIS CORRECTLY
+  for n=1:num_particles
+      weights(n,1) = mvnpdf(distance,norm(state(n,:)-lm), 1); % (num_particles)x1 --- XXX: DO THIS CORRECTLY
+  end
+  
   weights = weights / sum(weights); % (num_particles)x1
 
   %% Compute current state mean
