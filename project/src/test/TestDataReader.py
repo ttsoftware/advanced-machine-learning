@@ -1,6 +1,6 @@
 import unittest
 
-from src.Data.DataReader import DataReader
+from src.data.DataReader import DataReader
 
 
 class TestDataReader(unittest.TestCase):
