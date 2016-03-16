@@ -6,7 +6,7 @@ function [] = M_to_CSV( inputDir, outputDir )
         if strcmp(ext,'.mat')
             load(file{1});
             fullPath = fullfile(outputDir, strcat(name, '.csv'));
-            csvwrite(fullPath, data);
+            csvwrite(fullPath, data');
         end
     end
 end
