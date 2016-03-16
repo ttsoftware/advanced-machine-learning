@@ -10,4 +10,7 @@ class TestDataReader(unittest.TestCase):
 
         dataset = DataReader.read_data(filename, ',')
 
-        print dataset.principal_component(3)
+        pca_dataset = dataset.principal_component(k=None, component_variance=0.95)
+
+        print dataset[0].params
+        print pca_dataset[0].params

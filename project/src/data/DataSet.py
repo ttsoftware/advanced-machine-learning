@@ -66,14 +66,16 @@ class DataSet(list):
         """
         return self.class_sets[class_name]
 
-    def principal_component(self, k=2, centroids=None):
+    def principal_component(self, k=2, component_variance=0.8, centroids=None):
         """
         Returns a new dataset reduced to k principal components (dimensions)
+        :type component_variance: float The threshold for component variance
         :param centroids: Expects centroids to be of type dataset
         :rtype : DataSet
         :param k:
         """
         assert k < self.dimensions
+
         covariance = np.cov(np.array(self.unpack_params()).T)
 
         # eigenvectors and eigenvalues for the from the covariance matrix
@@ -82,8 +84,23 @@ class DataSet(list):
         sorted_eig = map(lambda (i, x): (x, eigenvectors[i]), enumerate(eigenvalues))
         sorted_eig = sorted(sorted_eig, key=lambda e: e[0], reverse=True)
 
-        # we choose the largest eigenvalues
-        W = np.array([sorted_eig[i][1] for i in range(k)])
+        if not k:
+            eigenvaluesum = sum(eigenvalues)
+            eigenvaluethreshold = eigenvaluesum * component_variance
+
+            cumsum_sorted_eig = 0
+            sorted_eig_threshold_index = 0
+            for i in range(len(sorted_eig)):
+                if cumsum_sorted_eig < eigenvaluethreshold:
+                    cumsum_sorted_eig += sorted_eig[i][0]
+                else:
+                    sorted_eig_threshold_index = i
+                    break
+
+            W = np.array([sorted_eig[i][1] for i in range(sorted_eig_threshold_index)])
+        else:
+            # we choose the largest eigenvalues
+            W = np.array([sorted_eig[i][1] for i in range(k)])
 
         return DataSet(
             map(
