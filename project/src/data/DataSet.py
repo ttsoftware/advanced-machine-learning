@@ -17,21 +17,7 @@ class DataSet(list):
             for i, x in enumerate(args[0]):
                 if not type(x) == DataPoint:
                     raise TypeError('Objects must be of type DataPoint')
-                self.add_class_point(x)
             super(DataSet, self).__init__(args[0])
-
-    def add_class_point(self, data_point):
-        """
-        Add datapoint to set of classes
-        :param data_point:
-        """
-        if self.dimensions is 0:
-            self.dimensions = len(data_point.params)
-
-        if data_point.target not in self.class_sets.keys():
-            self.class_sets[data_point.target] = DataSet()
-
-        self.class_sets[data_point.target].__iadd__([data_point], True)
 
     def unpack_params(self):
         """
@@ -57,14 +43,6 @@ class DataSet(list):
         Get the targets for our dataset
         """
         return map(lambda x: x.target, self)
-
-    def get_by_class(self, class_name):
-        """
-        Returns all DataPoints which belongs to given class, as numpy arrays
-        :param class_name:
-        :return:
-        """
-        return self.class_sets[class_name]
 
     def principal_component(self, k=2, component_variance=0.8, centroids=None):
         """
@@ -109,16 +87,29 @@ class DataSet(list):
             )
         )
 
+    def add_artifacts(self, k=None):
+        columns = np.array(self.unpack_params()).T
+
+        column_variances = map(lambda c: np.var(c), columns)
+        column_means = map(lambda c: np.mean(c), columns)
+
+        artifacts = []
+
+        for i in range(k):
+            z = np.random.randn()
+            artifact = []
+            for c in range(len(columns)):
+                artifact += [(column_means[c] + z) * column_variances[c]]
+            artifacts += [DataPoint(artifact)]
+
+        return artifacts
+
     def sort(self, cmp=None, key=None, reverse=False):
         super(DataSet, self).sort(cmp=cmp, key=lambda x: x.params[0], reverse=reverse)
 
-    def __iadd__(self, other, avoid_recursion=False):
+    def __iadd__(self, other):
         if not type(other[0]) == DataPoint:
             raise TypeError('Objects must be of type DataPoint')
-
-        if not avoid_recursion:
-            for i, data_point in enumerate(other):
-                self.add_class_point(data_point)
 
         if self.dimensions is 0:
             self.dimensions = len(other[0].params)

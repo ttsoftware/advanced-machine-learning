@@ -11,7 +11,7 @@ class DataPoint(object):
         if target is not None:
             self.target = float(target)
         else:
-            self.target = float(params.pop())
+            self.target = None
 
         # we cannot convert complex to float
         self.params = map(lambda x: float(x), params)

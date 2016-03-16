@@ -10,6 +10,13 @@ class TestDataReader(unittest.TestCase):
 
         dataset = DataReader.read_data(filename, ',')
 
+        artifacts = dataset.add_artifacts(3)
+
+        dataset_size = len(dataset)
+        dataset += artifacts
+
+        assert len(dataset) == dataset_size + 3
+
         pca_dataset = dataset.principal_component(k=None, component_variance=0.95)
 
         print dataset[0].params
