@@ -81,7 +81,7 @@ class DataSet(list):
             # we choose the largest eigenvalues
             W = np.array([sorted_eig[i][1] for i in range(k)])
 
-        return DataSet(
+        return W, DataSet(
             map(
                 lambda x: DataPoint(np.dot(W, x.params).tolist(), x.target),
                 self if not centroids else centroids
@@ -107,6 +107,17 @@ class DataSet(list):
                 # update the column in this row
                 params[index] += (column_means + z) * column_variances
                 self[key] = DataPoint(params)
+
+        return random_indexes
+
+    def project_pca(self, W):
+        Winv = np.linalg.pinv(W)
+        return DataSet(
+            map(
+                lambda row: DataPoint(np.dot(Winv, row).tolist()),
+                self.unpack_params()
+            )
+        )
 
     def sort(self, cmp=None, key=None, reverse=False):
         super(DataSet, self).sort(cmp=cmp, key=lambda x: x.params[0], reverse=reverse)
