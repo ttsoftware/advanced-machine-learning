@@ -3,7 +3,6 @@ from DataPoint import DataPoint
 
 
 class DataReader(object):
-
     @staticmethod
     def read_data(filename, delimiter=' '):
         """
@@ -15,8 +14,10 @@ class DataReader(object):
         with open(filename) as f:
             for line in f:
                 c = line.split(delimiter)
-                dataset += [DataPoint(c)]
+                is_empty = reduce(lambda x, y: x == "0" and y, c)
+                if not is_empty:
+                    dataset += [DataPoint(c)]
 
         # we sort by x-axis so we can more easily discover nearest neighbours
-        #dataset.sort()
+        # dataset.sort()
         return dataset

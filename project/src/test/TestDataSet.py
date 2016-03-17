@@ -3,17 +3,15 @@ import unittest
 from src.data.DataReader import DataReader
 
 
-class TestDataReader(unittest.TestCase):
+class TestDataSet(unittest.TestCase):
 
-    def test_read_data(self):
+    def test_pca(self):
         filename = '../../data/subject1_csv/eeg_200605191428_epochs.csv'
 
         dataset = DataReader.read_data(filename, ',')
-
-        artifacts = dataset.add_artifacts(3)
-
         dataset_size = len(dataset)
-        dataset += artifacts
+
+        dataset.add_artifacts(3)
 
         assert len(dataset) == dataset_size + 3
 

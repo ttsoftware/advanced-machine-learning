@@ -57,7 +57,7 @@ class DataSet(list):
         covariance = np.cov(np.array(self.unpack_params()).T)
 
         # eigenvectors and eigenvalues for the from the covariance matrix
-        eigenvalues, eigenvectors = np.linalg.eig(covariance)
+        eigenvalues, eigenvectors = np.linalg.eigh(covariance)
 
         sorted_eig = map(lambda (i, x): (x, eigenvectors[i]), enumerate(eigenvalues))
         sorted_eig = sorted(sorted_eig, key=lambda e: e[0], reverse=True)
@@ -102,7 +102,7 @@ class DataSet(list):
                 artifact += [(column_means[c] + z) * column_variances[c]]
             artifacts += [DataPoint(artifact)]
 
-        return artifacts
+        self.__iadd__(DataSet(artifacts))
 
     def sort(self, cmp=None, key=None, reverse=False):
         super(DataSet, self).sort(cmp=cmp, key=lambda x: x.params[0], reverse=reverse)
