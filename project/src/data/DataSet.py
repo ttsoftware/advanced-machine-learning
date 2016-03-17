@@ -1,5 +1,6 @@
 import numpy as np
 
+from random import randrange
 from DataPoint import DataPoint
 
 
@@ -47,7 +48,7 @@ class DataSet(list):
     def principal_component(self, k=2, component_variance=0.8, centroids=None):
         """
         Returns a new dataset reduced to k principal components (dimensions)
-        :type component_variance: float The threshold for component variance
+        :type component_variance: float The threshold for principal component variance
         :param centroids: Expects centroids to be of type dataset
         :rtype : DataSet
         :param k:
@@ -88,21 +89,24 @@ class DataSet(list):
         )
 
     def add_artifacts(self, k=None):
-        columns = np.array(self.unpack_params()).T
+        rows = self.unpack_params()
+        columns = np.array(rows).T
 
-        column_variances = map(lambda c: np.var(c), columns)
-        column_means = map(lambda c: np.mean(c), columns)
+        random_indexes = map(lambda x: randrange(0, len(columns)), range(k))
 
-        artifacts = []
+        # for each random column
+        for index in random_indexes:
 
-        for i in range(k):
-            z = np.random.randn()
-            artifact = []
-            for c in range(len(columns)):
-                artifact += [(column_means[c] + z) * column_variances[c]]
-            artifacts += [DataPoint(artifact)]
+            # mean and variance for the given column
+            column_means = np.mean(columns[index])
+            column_variances = np.var(columns[index])
 
-        self.__iadd__(DataSet(artifacts))
+            # for each value in the given column
+            for key, params in enumerate(rows):
+                z = np.random.randn()
+                # update the column in this row
+                params[index] += (column_means + z) * column_variances
+                self[key] = DataPoint(params)
 
     def sort(self, cmp=None, key=None, reverse=False):
         super(DataSet, self).sort(cmp=cmp, key=lambda x: x.params[0], reverse=reverse)
