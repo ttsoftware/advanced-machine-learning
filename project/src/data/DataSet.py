@@ -89,26 +89,36 @@ class DataSet(list):
         )
 
     def add_artifacts(self, k=None):
+        """
+        Adds k noisy artifacts to self.
+        :param k:
+        :return:
+        """
         rows = self.unpack_params()
         columns = np.array(rows).T
 
-        random_indexes = map(lambda x: randrange(0, len(columns)), range(k))
+        # random spike interval
+        spike_range_start = randrange(0, len(rows))
+        spike_range_end = randrange(spike_range_start, len(rows))
 
-        # for each random column
-        for index in random_indexes:
+        print (spike_range_start, spike_range_end)
+
+        # for each column
+        for index, column in enumerate(columns):
 
             # mean and variance for the given column
-            column_means = np.mean(columns[index])
-            column_variances = np.var(columns[index])
+            column_mean = np.mean(column)
+            column_variance = np.var(column)
 
             # for each value in the given column
-            for key, params in enumerate(rows):
-                z = np.random.randn()
+            for key, params in enumerate(rows[spike_range_start:spike_range_end]):
+                z = np.random.rand()
                 # update the column in this row
-                params[index] += (column_means + z) * column_variances
+                params[index] += (column_mean + z) * column_variance
                 self[key] = DataPoint(params)
 
-        return random_indexes
+        # return all columns with noise
+        return range(0, len(columns))
 
     def project_pca(self, W):
         Winv = np.linalg.pinv(W)
