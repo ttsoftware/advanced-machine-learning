@@ -100,22 +100,26 @@ class DataSet(list):
         # random spike interval
         spike_range_start = randrange(0, len(rows))
         spike_range_end = randrange(spike_range_start, len(rows))
+        index_size = spike_range_end - spike_range_start
 
         print (spike_range_start, spike_range_end)
 
+        column_means = [0] * index_size
+        column_variances = [0] * index_size
+
         # for each column
-        for index, column in enumerate(columns):
-
+        for col_index, column in enumerate(columns):
             # mean and variance for the given column
-            column_mean = np.mean(column)
-            column_variance = np.var(column)
+            column_means[col_index] = np.mean(column)
+            column_variances[col_index] = np.var(column)
 
-            # for each value in the given column
-            for key, params in enumerate(rows[spike_range_start:spike_range_end]):
-                z = np.random.rand()
+        # for each value in the given column
+        for row_index, row in enumerate(rows[spike_range_start:spike_range_end]):
+            for col_index, data_point in enumerate(row):
+                z = np.random.rand() + column_variances[col_index] / 15
                 # update the column in this row
-                params[index] += (column_mean + z) * column_variance
-                self[key] = DataPoint(params)
+                row[col_index] += z
+                self[row_index+spike_range_start] = DataPoint(row)
 
         # return all columns with noise
         return range(0, len(columns))
