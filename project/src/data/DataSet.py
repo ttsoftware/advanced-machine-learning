@@ -5,6 +5,7 @@ from DataPoint import DataPoint
 
 
 class DataSet(list):
+
     def __init__(self, *args, **kwargs):
         """
         :param args: List of DataPoints
@@ -81,6 +82,8 @@ class DataSet(list):
             # we choose the largest eigenvalues
             W = np.array([sorted_eig[i][1] for i in range(k)])
 
+        print len(W)
+
         return W, DataSet(
             map(
                 lambda x: DataPoint(np.dot(W, x.params).tolist(), x.target),
@@ -97,9 +100,16 @@ class DataSet(list):
         rows = self.unpack_params()
         columns = np.array(rows).T
 
+        random_columns_start = 6
+        random_columns_end = 12
+
+        print (random_columns_start, random_columns_end)
+
+        columns = columns[random_columns_start:random_columns_end]
+
         # random spike interval
         spike_range_start = randrange(0, len(rows))
-        spike_range_end = randrange(spike_range_start, len(rows))
+        spike_range_end = randrange(spike_range_start, (spike_range_start+len(rows)/5))
         index_size = spike_range_end - spike_range_start
 
         print (spike_range_start, spike_range_end)
@@ -115,10 +125,10 @@ class DataSet(list):
 
         # for each value in the given column
         for row_index, row in enumerate(rows[spike_range_start:spike_range_end]):
+            z = np.random.uniform(1,2)
             for col_index, data_point in enumerate(row):
-                z = np.random.rand() + column_variances[col_index] / 15
                 # update the column in this row
-                row[col_index] += z
+                row[col_index] += z + column_variances[col_index]
                 self[row_index+spike_range_start] = DataPoint(row)
 
         # return all columns with noise
