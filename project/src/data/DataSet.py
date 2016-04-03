@@ -5,7 +5,6 @@ from DataPoint import DataPoint
 
 
 class DataSet(list):
-
     def __init__(self, *args, **kwargs):
         """
         :param args: List of DataPoints
@@ -109,7 +108,7 @@ class DataSet(list):
 
         # random spike interval
         spike_range_start = randrange(0, len(rows))
-        spike_range_end = randrange(spike_range_start, (spike_range_start+len(rows)/5))
+        spike_range_end = randrange(spike_range_start, (spike_range_start + len(rows)))
         index_size = spike_range_end - spike_range_start
 
         print (spike_range_start, spike_range_end)
@@ -125,11 +124,12 @@ class DataSet(list):
 
         # for each value in the given column
         for row_index, row in enumerate(rows[spike_range_start:spike_range_end]):
-            z = np.random.uniform(1,2)
+            z = np.random.uniform(1, 2)
             for col_index, data_point in enumerate(row):
                 # update the column in this row
-                row[col_index] += z + column_variances[col_index]
-                self[row_index+spike_range_start] = DataPoint(row)
+                if random_columns_start < col_index < random_columns_end:
+                    row[col_index] += z * 20
+                    self[row_index + spike_range_start] = DataPoint(row)
 
         # return all columns with noise
         return range(0, len(columns))

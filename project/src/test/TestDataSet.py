@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from src.data.DataReader import DataReader
+from src.data.DataSet import DataSet
 from src.data.Normalizer import Normalizer
 
 
@@ -11,6 +12,7 @@ class TestDataSet(unittest.TestCase):
         filename = '../../data/subject1_csv/eeg_200605191428_epochs/small.csv'
 
         dataset = DataReader.read_data(filename, ',')
+        dataset = DataSet(dataset[0:100])
 
         normalizer = Normalizer(dataset)
         dataset = normalizer.normalize_means(dataset)
