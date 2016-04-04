@@ -111,14 +111,14 @@ class DataSet(list):
         spike_range_end = 50
         spike_size = spike_range_end - spike_range_start
 
-        mean = np.mean(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
+        mean = np.array([np.mean(x) for x in data_transposed])
         cov = np.cov(data_transposed)
 
-        divisor = np.array([0.01 for i in range(len(cov))])
+        #divisor = np.array([0.01 for i in range(len(cov))])
 
-        cov_big = np.divide(cov, divisor)
+        #cov_big = np.divide(cov, divisor)
 
-        samples = np.random.multivariate_normal(mean, cov_big, spike_size)
+        samples = np.random.multivariate_normal(mean, cov, spike_size)
 
         data[spike_range_start:spike_range_end] += samples
 
