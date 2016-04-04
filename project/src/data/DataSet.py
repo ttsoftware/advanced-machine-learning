@@ -62,7 +62,7 @@ class DataSet(list):
         eigenvalues, eigenvectors = np.linalg.eigh(covariance)
 
         sorted_eig = map(lambda (i, x): (x, eigenvectors[i]), enumerate(eigenvalues))
-        sorted_eig = sorted(sorted_eig, key=lambda e: e[0], reverse=True)
+        sorted_eig = sorted(sorted_eig, key=lambda e: e[0], reverse=False)
 
         if not k:
             eigenvaluesum = sum(eigenvalues)
@@ -71,7 +71,7 @@ class DataSet(list):
             cumsum_sorted_eig = 0
             sorted_eig_threshold_index = 0
             for i in range(len(sorted_eig)):
-                if cumsum_sorted_eig < eigenvaluethreshold:
+                if (cumsum_sorted_eig + sorted_eig[i][0]) < eigenvaluethreshold:
                     cumsum_sorted_eig += sorted_eig[i][0]
                 else:
                     sorted_eig_threshold_index = i
@@ -79,7 +79,7 @@ class DataSet(list):
 
             W = np.array([sorted_eig[i][1] for i in range(sorted_eig_threshold_index)])
         else:
-            # we choose the largest eigenvalues
+            # we choose the smallest eigenvalues
             W = np.array([sorted_eig[i][1] for i in range(k)])
 
         print len(W)

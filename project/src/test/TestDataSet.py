@@ -8,7 +8,7 @@ from src.data.Normalizer import Normalizer
 
 class TestDataSet(unittest.TestCase):
     def test_pca(self):
-        filename = '../../data/subject1_csv/eeg_200605191428_epochs/small.csv'
+        filename = '../../data/subject1_csv/eeg_200605191428_epochs/tiny.csv'
 
         dataset = DataReader.read_data(filename, ',')
 
@@ -21,7 +21,7 @@ class TestDataSet(unittest.TestCase):
         noise_cols = dataset.add_artifacts()
         noise_cols = noise_cols[:10]
 
-        W, pca_dataset = dataset.principal_component(k=None, component_variance=0.90)
+        W, pca_dataset = dataset.principal_component(k=None, component_variance=0.05)
         projection_dataset = pca_dataset.project_pca(W)
 
         # TODO: Project the principal components back to the original dataset
@@ -40,6 +40,8 @@ class TestDataSet(unittest.TestCase):
         pca_dataset_columns = np.array(pca_dataset.unpack_params()).T
 
         for idx, j in enumerate(pca_dataset_columns):
+            if idx == len(noise_cols):
+                break
             axarr[idx, 3].plot(j)
 
         # Fine-tune figure; hide x ticks for top plots and y ticks for right plots
