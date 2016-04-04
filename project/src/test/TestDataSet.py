@@ -21,9 +21,8 @@ class TestDataSet(unittest.TestCase):
 
         # Add random noise to 3 randomly chosen columns
         noise_cols = dataset.add_artifacts()
-        noise_cols = noise_cols[:10]
 
-        W, pca_dataset = dataset.principal_component(k=None, component_variance=0.90)
+        W, pca_dataset = dataset.principal_component(k=None, component_variance=0.80)
         projection_dataset = pca_dataset.project_pca(W)
 
         # TODO: Project the principal components back to the original dataset

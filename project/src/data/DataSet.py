@@ -127,12 +127,12 @@ class DataSet(list):
             z = np.random.uniform(1, 2)
             for col_index, data_point in enumerate(row):
                 # update the column in this row
-                if random_columns_start < col_index < random_columns_end:
-                    row[col_index] += z * 20
+                if random_columns_start <= col_index < random_columns_end:
+                    row[col_index] += z * 6
                     self[row_index + spike_range_start] = DataPoint(row)
 
         # return all columns with noise
-        return range(0, len(columns))
+        return range(random_columns_start, random_columns_end)
 
     def project_pca(self, W):
         Winv = np.linalg.pinv(W)
