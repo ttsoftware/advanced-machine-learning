@@ -17,24 +17,26 @@ class TestDataSet(unittest.TestCase):
         old_dataset = dataset.clone()
 
         # Add random noise to 3 randomly chosen columns
-        noise_cols = dataset.add_artifacts()
+        noise_dataset, spike_range = dataset.add_artifacts()
 
         # normalizer = Normalizer(dataset)
         # dataset = normalizer.normalize_means(dataset)
+
+        sub_set_size = 10
 
         projection_dataset = dataset.project_pca(k=None, component_variance=0.90)
 
         # TODO: Project the principal components back to the original dataset
 
-        f, axarr = plt.subplots(len(noise_cols), 3)
+        f, axarr = plt.subplots(sub_set_size, 3)
         axarr[0, 0].set_title('Original EEG')
         axarr[0, 1].set_title('Noised EEG')
         axarr[0, 2].set_title('Corrected EEG')
         #axarr[0, 3].set_title('Principal components')
 
-        for index, i in enumerate(noise_cols):
+        for index, i in enumerate(range(sub_set_size)):
             axarr[index, 0].plot(np.array(old_dataset.unpack_params()).T[i])
-            axarr[index, 1].plot(np.array(dataset.unpack_params()).T[i])
+            axarr[index, 1].plot(np.array(noise_dataset.unpack_params()).T[i])
             axarr[index, 2].plot(np.array(projection_dataset.unpack_params()).T[i])
 
         #pca_dataset_columns = np.array(projection_dataset.unpack_params()).T

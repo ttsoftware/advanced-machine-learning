@@ -1,6 +1,8 @@
 import numpy as np
 
 from random import randrange
+from scipy.optimize import curve_fit
+
 from DataPoint import DataPoint
 
 
@@ -15,10 +17,11 @@ class DataSet(list):
         self.dimensions = 0  # number of dimensions in each datapoint
 
         if len(args) > 0:
-            for i, x in enumerate(args[0]):
+            val = args[0]
+            for i, x in enumerate(val):
                 if not type(x) == DataPoint:
-                    raise TypeError('Objects must be of type DataPoint')
-            super(DataSet, self).__init__(args[0])
+                    val[i] = DataPoint(x)
+            super(DataSet, self).__init__(val)
 
     def unpack_params(self):
         """
@@ -55,7 +58,9 @@ class DataSet(list):
         """
         assert k < self.dimensions
 
-        covariance = np.cov(np.array(self.unpack_params()).T)
+        data_transposed = np.array(self.unpack_params()).T
+
+        covariance = np.cov(data_transposed)
 
         # eigenvectors and eigenvalues for the from the covariance matrix
         eigenvalues, eigenvectors = np.linalg.eigh(covariance)
@@ -77,15 +82,14 @@ class DataSet(list):
                     break
 
             W = np.array([sorted_eig[i][1] for i in range(sorted_eig_threshold_index)])
+            W = np.append(W, [np.zeros(len(data_transposed))], axis=0)
         else:
             # we choose the smallest eigenvalues
             W = np.array([sorted_eig[i][1] for i in range(k)])
 
-        print len(W)
-
         return DataSet(
             map(
-                lambda x: DataPoint(np.dot(W, x.params).tolist(), x.target),
+                lambda x: DataPoint(np.dot(W, x.params).tolist()),
                 self if not centroids else centroids
             )
         )
@@ -96,15 +100,8 @@ class DataSet(list):
         :param k:
         :return:
         """
-        rows = self.unpack_params()
-        columns = np.array(rows).T
-
-        random_columns_start = 6
-        random_columns_end = 12
-
-        print (random_columns_start, random_columns_end)
-
-        columns = columns[random_columns_start:random_columns_end]
+        data = np.array(self.unpack_params())
+        data_transposed = data.T
 
         # random spike interval
         # spike_range_start = randrange(0, len(rows))
@@ -112,34 +109,22 @@ class DataSet(list):
 
         spike_range_start = 30
         spike_range_end = 50
+        spike_size = spike_range_end - spike_range_start
 
-        index_size = spike_range_end - spike_range_start
+        mean = np.mean(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
+        cov = np.cov(data_transposed)
 
-        print (spike_range_start, spike_range_end)
+        divisor = np.array([0.01 for i in range(len(cov))])
 
-        column_means = [0] * index_size
-        column_variances = [0] * index_size
+        cov_big = np.divide(cov, divisor)
 
-        # for each column
-        for col_index, column in enumerate(columns):
-            # mean and variance for the given column
-            column_means[col_index] = np.mean(column)
-            column_variances[col_index] = np.var(column)
+        samples = np.random.multivariate_normal(mean, cov_big, spike_size)
 
-        # for each value in the given column
-        for row_index, row in enumerate(rows[spike_range_start:spike_range_end]):
-            z = np.random.uniform(1, 2)
-            for col_index, data_point in enumerate(row):
-                # update the column in this row
-                if random_columns_start <= col_index < random_columns_end:
-                    row[col_index] += z + column_means[col_index] * 6
-                    self[row_index + spike_range_start] = DataPoint(row)
+        data[spike_range_start:spike_range_end] += samples
 
-        # return all columns with noise
-        return range(random_columns_start, random_columns_end)
+        noise_dataset = DataSet(data.tolist())
 
-    def gauss_function(x, a, x0, sigma):
-        return a * np.exp(-(x - x0) ** 2 / (2 * sigma ** 2))
+        return noise_dataset, range(spike_range_start, spike_range_end)
 
     def project_W(self, W):
         Winv = np.linalg.pinv(W)
