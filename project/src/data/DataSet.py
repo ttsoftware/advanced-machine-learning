@@ -45,7 +45,7 @@ class DataSet(list):
         """
         return map(lambda x: x.target, self)
 
-    def principal_component(self, k=2, component_variance=0.8, centroids=None):
+    def project_pca(self, k=2, component_variance=0.8, centroids=None):
         """
         Returns a new dataset reduced to k principal components (dimensions)
         :type component_variance: float The threshold for principal component variance
@@ -83,7 +83,7 @@ class DataSet(list):
 
         print len(W)
 
-        return W, DataSet(
+        return DataSet(
             map(
                 lambda x: DataPoint(np.dot(W, x.params).tolist(), x.target),
                 self if not centroids else centroids
@@ -107,8 +107,12 @@ class DataSet(list):
         columns = columns[random_columns_start:random_columns_end]
 
         # random spike interval
-        spike_range_start = randrange(0, len(rows))
-        spike_range_end = randrange(spike_range_start, (spike_range_start + len(rows)))
+        # spike_range_start = randrange(0, len(rows))
+        # spike_range_end = randrange(spike_range_start, (spike_range_start + len(rows)))
+
+        spike_range_start = 30
+        spike_range_end = 50
+
         index_size = spike_range_end - spike_range_start
 
         print (spike_range_start, spike_range_end)
@@ -128,13 +132,16 @@ class DataSet(list):
             for col_index, data_point in enumerate(row):
                 # update the column in this row
                 if random_columns_start <= col_index < random_columns_end:
-                    row[col_index] += z * 6
+                    row[col_index] += z + column_means[col_index] * 6
                     self[row_index + spike_range_start] = DataPoint(row)
 
         # return all columns with noise
         return range(random_columns_start, random_columns_end)
 
-    def project_pca(self, W):
+    def gauss_function(x, a, x0, sigma):
+        return a * np.exp(-(x - x0) ** 2 / (2 * sigma ** 2))
+
+    def project_W(self, W):
         Winv = np.linalg.pinv(W)
         return DataSet(
             map(
