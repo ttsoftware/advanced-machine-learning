@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from src.Data.DataReader import DataReader
 from src.Data.Normalizer import Normalizer
+from src.Data.DataSet import DataSet
 
 def mean_square(pca, old):
    new_data = np.array(pca.unpack_params())
@@ -22,23 +23,29 @@ dataset = normalizer.normalize_means(dataset)
 old_dataset = dataset.clone()
 
 # Add random noise to 3 randomly chosen columns
-noise_cols = dataset.add_artifacts()
-noise_cols = noise_cols[:10]
+noisy_set, noise_interval = dataset.add_artifacts()
+artifact_set = noisy_set[noise_interval[0]:noise_interval[1]]
 
 mses = []
+mses2 = []
 variances = []
 
 for variance in np.linspace(0.7,0.99, num=5):
-    W, pca_dataset = dataset.principal_component(k=None, component_variance=variance)
-    projection_dataset = pca_dataset.project_pca(W)
+    print variance
+    projection_dataset = noisy_set.project_pca(k=None, component_variance=variance)
+    artifact_set_pca = projection_dataset[noise_interval[0]:noise_interval[1]]
     mse = mean_square(projection_dataset, old_dataset)
     mses.append(mse)
+    mse2 = mean_square(DataSet(artifact_set_pca), DataSet(artifact_set))
+    mses2.append(mse2)
     variances.append(variance)
 
-plt.plot(variances,mses)
-plt.xlabel('Variance of principal components')
-plt.ylabel('Mean square error')
-plt.title('For the all dataset')
+f, axarr = plt.subplots(2, 1)
+axarr[0].set_title('For all dataset')
+axarr[1].set_title('For sections with artifacts')
+axarr[0].plot(variances, mses)
+axarr[1].plot(variances, mses2)
+axarr[1].set_xlabel('Variance threshold for PCA components')
 plt.show()
 
 
