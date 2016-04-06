@@ -60,8 +60,7 @@ class DataSet(list):
         """
         assert k < self.dimensions
 
-        data = np.array(self.unpack_params())
-        data_transposed = data.T
+        data_transposed = np.array(self.unpack_params()).T
 
         covariance = np.cov(data_transposed)
 
@@ -93,9 +92,7 @@ class DataSet(list):
         #for i in range(len(data_transposed) - len(W)):
         #    W = np.append(W, [np.zeros(len(data_transposed))], axis=0)
 
-        projection_data = np.dot(W, data_transposed)
-
-        return DataSet(projection_data.T.tolist())
+        return DataSet(np.dot(W, data_transposed).T.tolist())
 
     def add_artifacts(self, k=None):
         """
