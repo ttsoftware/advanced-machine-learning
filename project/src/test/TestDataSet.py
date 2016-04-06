@@ -14,17 +14,16 @@ class TestDataSet(unittest.TestCase):
         dataset = DataReader.read_data(filename, ',')
         dataset = DataSet(dataset[0:100])
 
-        old_dataset = dataset.clone()
-
         # Add random noise to 3 randomly chosen columns
-        noise_dataset, spike_range = dataset.add_artifacts()
+        # noise_dataset, spike_range = dataset.add_artifacts()
+        noise_dataset = dataset.clone()
 
-        # normalizer = Normalizer(dataset)
-        # dataset = normalizer.normalize_means(dataset)
+        #normalizer = Normalizer(noise_dataset)
+        #noise_dataset = normalizer.normalize_means(noise_dataset)
 
         sub_set_size = 10
 
-        projection_dataset = dataset.project_pca(k=None, component_variance=0.90)
+        projection_dataset = noise_dataset.project_pca(k=None, component_variance=0.80)
 
         # TODO: Project the principal components back to the original dataset
 
@@ -35,7 +34,7 @@ class TestDataSet(unittest.TestCase):
         #axarr[0, 3].set_title('Principal components')
 
         for index, i in enumerate(range(sub_set_size)):
-            axarr[index, 0].plot(np.array(old_dataset.unpack_params()).T[i])
+            axarr[index, 0].plot(np.array(dataset.unpack_params()).T[i])
             axarr[index, 1].plot(np.array(noise_dataset.unpack_params()).T[i])
             axarr[index, 2].plot(np.array(projection_dataset.unpack_params()).T[i])
 
