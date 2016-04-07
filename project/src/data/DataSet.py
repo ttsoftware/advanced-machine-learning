@@ -123,7 +123,7 @@ class DataSet(list):
         cov = np.cov(data_transposed)
 
         # covariance matrix with smaller variance
-        divisor = np.array([1 for i in range(len(cov))])
+        divisor = np.array([0.1 for i in range(len(cov))])
         cov_small = np.divide(cov, divisor)
 
         # sample from our gaussian
