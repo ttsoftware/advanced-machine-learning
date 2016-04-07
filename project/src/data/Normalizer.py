@@ -43,7 +43,7 @@ class Normalizer(object):
 
         return normalized_dataset
 
-    def normalize_means(self, inputset):
+    def normalize_means_std(self, inputset):
         """
         Return normalized version of inputset, normalized to each dimension in mean 0 and variance 1 in the self.dataset.
         Since the variance is standard deviation^2, we can simply subtract the dimension mean and divide by dimension standard deviation in each data point in each dimension.
@@ -54,6 +54,17 @@ class Normalizer(object):
         """
         return self.normalize(
             lambda d, x: (x - self.dimensions_means[d]) / self.dimensions_stds[d],
+            inputset
+        )
+
+    def normalize_means(self, inputset):
+        """
+
+        :param DataSet inputset:
+        :return DataSet:
+        """
+        return self.normalize(
+            lambda d, x: (x - self.dimensions_means[d]),
             inputset
         )
 

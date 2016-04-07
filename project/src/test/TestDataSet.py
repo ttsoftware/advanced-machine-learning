@@ -3,28 +3,28 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from src.data.DataReader import DataReader
-from src.data.DataSet import DataSet
 from src.data.Normalizer import Normalizer
 
 
 class TestDataSet(unittest.TestCase):
     def test_pca(self):
 
-        filename = '../../data/subject1_csv/eeg_200605191428_epochs/tiny.csv'
+        filename = '../../data/subject1_csv/eeg_200605191428_epochs/tiny2.csv'
         filename_artifacts = '../../data/subject1_csv/eeg_200605191428_epochs/tiny_artifacts.csv'
 
         dataset = DataReader.read_data(filename, ',')
 
         # Add random noise to 3 randomly chosen columns
         # noise_dataset, spike_range = dataset.add_artifacts()
-        noise_dataset = DataReader.read_data(filename_artifacts, ',')
+        noise_dataset = dataset.clone()  # DataReader.read_data(filename_artifacts, ',')
 
-        #normalizer = Normalizer(noise_dataset)
-        #noise_dataset = normalizer.normalize_means(noise_dataset)
+        normalizer = Normalizer(noise_dataset)
+        noise_dataset = normalizer.normalize_means(noise_dataset)
 
-        sub_set_size = 15
+        sub_set_size = 10
 
-        projection_dataset = noise_dataset.project_pca(k=None, component_variance=0.80)
+        reconstructed_dataset = noise_dataset.project_pca(k=None, component_variance=0.80)
+        reconstructed_dataset.add_means(normalizer.dimensions_means)
 
         # TODO: Project the principal components back to the original dataset
 
@@ -37,7 +37,7 @@ class TestDataSet(unittest.TestCase):
         for index, i in enumerate(range(sub_set_size)):
             axarr[index, 0].plot(np.array(dataset.unpack_params()).T[i])
             axarr[index, 1].plot(np.array(noise_dataset.unpack_params()).T[i])
-            axarr[index, 2].plot(np.array(projection_dataset.unpack_params()).T[i])
+            axarr[index, 2].plot(np.array(reconstructed_dataset.unpack_params()).T[i])
 
         #pca_dataset_columns = np.array(projection_dataset.unpack_params()).T
 

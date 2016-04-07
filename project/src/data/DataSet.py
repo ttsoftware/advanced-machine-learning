@@ -1,9 +1,5 @@
 import numpy as np
 
-from random import randrange
-from scipy.optimize import curve_fit
-from scipy.stats import multivariate_normal
-
 from DataPoint import DataPoint
 
 
@@ -60,7 +56,8 @@ class DataSet(list):
         """
         assert k < self.dimensions
 
-        data_transposed = np.array(self.unpack_params()).T
+        data = np.array(self.unpack_params())
+        data_transposed = data.T
 
         covariance = np.cov(data_transposed)
 
@@ -88,11 +85,17 @@ class DataSet(list):
             # we choose the smallest eigenvalues
             W = np.array([sorted_eig[i][1] for i in range(k)])
 
-        # for each missing component, add a 0 vector.
-        #for i in range(len(data_transposed) - len(W)):
-        #    W = np.append(W, [np.zeros(len(data_transposed))], axis=0)
+        eig_projection = np.empty([len(W), len(data)])
+        for t, datapoint in enumerate(data):
+            for q, eigenvector in enumerate(W):
+                eig_projection[q][t] = sum(datapoint*eigenvector)
 
-        return DataSet(np.dot(W, data_transposed).T.tolist())
+        reconstructed_data = np.empty(data_transposed.shape)
+        for j, eigen_component in enumerate(W.T):
+            for t, datapoint in enumerate(eig_projection.T):
+                reconstructed_data[j][t] = sum(eigen_component*datapoint)
+
+        return DataSet(reconstructed_data.T.tolist())
 
     def add_artifacts(self, k=None):
         """
@@ -107,16 +110,16 @@ class DataSet(list):
         # spike_range_start = randrange(0, len(rows))
         # spike_range_end = randrange(spike_range_start, (spike_range_start + len(rows)))
 
-        spike_range_start = 30
-        spike_range_end = 50
+        spike_range_start = 20
+        spike_range_end = 30
+
         spike_size = spike_range_end - spike_range_start
 
         mean = np.mean(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
-        # mean = np.array([np.mean(x) for x in data_transposed])
         cov = np.cov(data_transposed)
 
         # covariance matrix with smaller variance
-        divisor = np.array([0.1 for i in range(len(cov))])
+        divisor = np.array([1 for i in range(len(cov))])
         cov_small = np.divide(cov, divisor)
 
         # sample from our gaussian
@@ -136,6 +139,13 @@ class DataSet(list):
                 self.unpack_params()
             )
         )
+
+    def add_means(self, means):
+        for i, datapoint in enumerate(self):
+            params = datapoint.params
+            for j, mean in enumerate(means):
+                params[j] += mean
+            self[i] = DataPoint(params)
 
     def sort(self, cmp=None, key=None, reverse=False):
         super(DataSet, self).sort(cmp=cmp, key=lambda x: x.params[0], reverse=reverse)
