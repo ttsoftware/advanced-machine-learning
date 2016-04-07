@@ -19,9 +19,11 @@ class Normalizer(object):
 
         self.dimensions_means = []  # mean for each dimension
         self.dimensions_stds = []  # standard deviation for each dimension
+        self.dimensions_variance = []  # standard deviation for each dimension
         for dim, dim_values in enumerate(flat_dimensions):
             self.dimensions_means += [np.mean(dim_values)]
             self.dimensions_stds += [np.std(dim_values)]
+            self.dimensions_variance += [np.var(dim_values)]
 
     def normalize(self, normalize_function, inputset):
         """
