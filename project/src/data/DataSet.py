@@ -1,6 +1,5 @@
 import numpy as np
 
-from random import randrange
 from DataPoint import DataPoint
 
 
@@ -15,10 +14,13 @@ class DataSet(list):
         self.dimensions = 0  # number of dimensions in each datapoint
 
         if len(args) > 0:
-            for i, x in enumerate(args[0]):
+            val = args[0]
+            for i, x in enumerate(val):
                 if not type(x) == DataPoint:
-                    raise TypeError('Objects must be of type DataPoint')
-            super(DataSet, self).__init__(args[0])
+                    val[i] = DataPoint(x)
+            super(DataSet, self).__init__(val)
+
+        self.dimensions = len(np.array(self.unpack_params()).T)
 
     def unpack_params(self):
         """
@@ -45,32 +47,34 @@ class DataSet(list):
         """
         return map(lambda x: x.target, self)
 
-    def principal_component(self, k=2, component_variance=0.8, centroids=None):
+    def project_pca(self, k=2, component_variance=0.8):
         """
         Returns a new dataset reduced to k principal components (dimensions)
-        :type component_variance: float The threshold for principal component variance
-        :param centroids: Expects centroids to be of type dataset
-        :rtype : DataSet
+        :param component_variance: float The threshold for principal component variance
         :param k:
+        :rtype : DataSet
         """
         assert k < self.dimensions
 
-        covariance = np.cov(np.array(self.unpack_params()).T)
+        data = np.array(self.unpack_params())
+        data_transposed = data.T
+
+        covariance = np.cov(data_transposed)
 
         # eigenvectors and eigenvalues for the from the covariance matrix
         eigenvalues, eigenvectors = np.linalg.eigh(covariance)
 
         sorted_eig = map(lambda (i, x): (x, eigenvectors[i]), enumerate(eigenvalues))
-        sorted_eig = sorted(sorted_eig, key=lambda e: e[0], reverse=True)
+        sorted_eig = sorted(sorted_eig, key=lambda e: e[0], reverse=False)
 
-        if not k:
+        if k is None:
             eigenvaluesum = sum(eigenvalues)
             eigenvaluethreshold = eigenvaluesum * component_variance
 
             cumsum_sorted_eig = 0
             sorted_eig_threshold_index = 0
             for i in range(len(sorted_eig)):
-                if cumsum_sorted_eig < eigenvaluethreshold:
+                if (cumsum_sorted_eig + sorted_eig[i][0]) < eigenvaluethreshold:
                     cumsum_sorted_eig += sorted_eig[i][0]
                 else:
                     sorted_eig_threshold_index = i
@@ -78,39 +82,56 @@ class DataSet(list):
 
             W = np.array([sorted_eig[i][1] for i in range(sorted_eig_threshold_index)])
         else:
-            # we choose the largest eigenvalues
+            # we choose the smallest eigenvalues
             W = np.array([sorted_eig[i][1] for i in range(k)])
 
-        return W, DataSet(
-            map(
-                lambda x: DataPoint(np.dot(W, x.params).tolist(), x.target),
-                self if not centroids else centroids
-            )
-        )
+        eig_projection = np.empty([len(W), len(data)])
+        for t, datapoint in enumerate(data):
+            for q, eigenvector in enumerate(W):
+                eig_projection[q][t] = sum(datapoint*eigenvector)
+
+        reconstructed_data = np.empty(data_transposed.shape)
+        for j, eigen_component in enumerate(W.T):
+            for t, datapoint in enumerate(eig_projection.T):
+                reconstructed_data[j][t] = sum(eigen_component*datapoint)
+
+        return DataSet(reconstructed_data.T.tolist())
 
     def add_artifacts(self, k=None):
-        rows = self.unpack_params()
-        columns = np.array(rows).T
+        """
+        Adds k noisy artifacts to self.
+        :param k:
+        :return:
+        """
+        data = np.array(self.unpack_params())
+        data_transposed = data.T
 
-        random_indexes = map(lambda x: randrange(0, len(columns)), range(k))
+        # random spike interval
+        # spike_range_start = randrange(0, len(rows))
+        # spike_range_end = randrange(spike_range_start, (spike_range_start + len(rows)))
 
-        # for each random column
-        for index in random_indexes:
+        spike_range_start = 20
+        spike_range_end = 30
 
-            # mean and variance for the given column
-            column_means = np.mean(columns[index])
-            column_variances = np.var(columns[index])
+        spike_size = spike_range_end - spike_range_start
 
-            # for each value in the given column
-            for key, params in enumerate(rows):
-                z = np.random.randn()
-                # update the column in this row
-                params[index] += (column_means + z) * column_variances
-                self[key] = DataPoint(params)
+        mean = np.mean(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
+        cov = np.cov(data_transposed)
 
-        return random_indexes
+        # covariance matrix with smaller variance
+        divisor = np.array([1 for i in range(len(cov))])
+        cov_small = np.divide(cov, divisor)
 
-    def project_pca(self, W):
+        # sample from our gaussian
+        samples = np.random.multivariate_normal(mean, cov_small, spike_size)
+
+        data[spike_range_start:spike_range_end] = samples
+
+        noise_dataset = DataSet(data.tolist())
+
+        return noise_dataset, range(spike_range_start, spike_range_end)
+
+    def project_W(self, W):
         Winv = np.linalg.pinv(W)
         return DataSet(
             map(
@@ -118,6 +139,13 @@ class DataSet(list):
                 self.unpack_params()
             )
         )
+
+    def add_means(self, means):
+        for i, datapoint in enumerate(self):
+            params = datapoint.params
+            for j, mean in enumerate(means):
+                params[j] += mean
+            self[i] = DataPoint(params)
 
     def sort(self, cmp=None, key=None, reverse=False):
         super(DataSet, self).sort(cmp=cmp, key=lambda x: x.params[0], reverse=reverse)
