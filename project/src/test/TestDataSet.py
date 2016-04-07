@@ -14,11 +14,11 @@ class TestDataSet(unittest.TestCase):
         filename_artifacts = '../../data/subject1_csv/eeg_200605191428_epochs/tiny_artifacts.csv'
 
         dataset = DataReader.read_data(filename, ',')
-        dataset = DataSet(dataset[:100])
+        dataset = DataSet(dataset[220:280])
 
         # Add random noise to 3 randomly chosen columns
-        noise_dataset, spike_range = dataset.add_artifacts()
-        #noise_dataset = dataset.clone()  # DataReader.read_data(filename_artifacts, ',')
+        # noise_dataset, spike_range = dataset.add_artifacts()
+        noise_dataset = dataset.clone()  # DataReader.read_data(filename_artifacts, ',')
 
         normalizer = Normalizer(noise_dataset)
         noise_dataset = normalizer.normalize_means(noise_dataset)
@@ -30,16 +30,17 @@ class TestDataSet(unittest.TestCase):
 
         # TODO: Project the principal components back to the original dataset
 
-        f, axarr = plt.subplots(sub_set_size, 3)
-        axarr[0, 0].set_title('Original EEG')
-        axarr[0, 1].set_title('Noised EEG')
-        axarr[0, 2].set_title('Corrected EEG')
+        f, axarr = plt.subplots(sub_set_size, 1)
+        #axarr[0, 0].set_title('Original EEG')
+        #axarr[0, 1].set_title('Normalized EEG')
+        axarr[0].set_title('Corrected EEG')
         #axarr[0, 3].set_title('Principal components')
 
         for index, i in enumerate(range(sub_set_size)):
-            axarr[index, 0].plot(np.array(dataset.unpack_params()).T[i])
-            axarr[index, 1].plot(np.array(noise_dataset.unpack_params()).T[i])
-            axarr[index, 2].plot(np.array(reconstructed_dataset.unpack_params()).T[i])
+            #axarr[index, 0].plot(np.array(dataset.unpack_params()).T[i])
+            axarr[index].plot(np.array(dataset.unpack_params()).T[i], color='r')
+            #axarr[index, 1].plot(np.array(noise_dataset.unpack_params()).T[i])
+            axarr[index].plot(np.array(reconstructed_dataset.unpack_params()).T[i], color='b')
 
         #pca_dataset_columns = np.array(projection_dataset.unpack_params()).T
 
@@ -47,6 +48,7 @@ class TestDataSet(unittest.TestCase):
         #    axarr[idx, 3].plot(j)
 
         # Fine-tune figure; hide x ticks for top plots and y ticks for right plots
-        plt.setp([a.get_xticklabels() for a in axarr[1, :]], visible=False)
-        plt.setp([a.get_yticklabels() for a in axarr[:, 2]], visible=True)
-        plt.show()
+        #plt.setp([a.get_xticklabels() for a in axarr[0]], visible=False)
+        #plt.setp([a.get_yticklabels() for a in axarr[0]], visible=True)
+        plt.savefig("figure", papertype='a0', pad_inches=0, bbox_inches=0, frameon=False)
+        #plt.show()

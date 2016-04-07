@@ -114,8 +114,8 @@ class DataSet(list):
         # spike_range_start = randrange(0, len(rows))
         # spike_range_end = randrange(spike_range_start, (spike_range_start + len(rows)))
 
-        spike_range_start = 30
-        spike_range_end = 80
+        spike_range_start = 10
+        spike_range_end = 30
 
         spike_size = spike_range_end - spike_range_start
 
