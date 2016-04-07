@@ -3,27 +3,29 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from src.data.DataReader import DataReader
+from src.data.DataSet import DataSet
 from src.data.Normalizer import Normalizer
 
 
 class TestDataSet(unittest.TestCase):
     def test_pca(self):
 
-        filename = '../../data/subject1_csv/eeg_200605191428_epochs/tiny.csv'
+        filename = '../../data/emotiv/EEG_Data_filtered.csv'
         filename_artifacts = '../../data/subject1_csv/eeg_200605191428_epochs/tiny_artifacts.csv'
 
         dataset = DataReader.read_data(filename, ',')
+        dataset = DataSet(dataset[:100])
 
         # Add random noise to 3 randomly chosen columns
-        # noise_dataset, spike_range = dataset.add_artifacts()
-        noise_dataset = dataset.clone()  # DataReader.read_data(filename_artifacts, ',')
+        noise_dataset, spike_range = dataset.add_artifacts()
+        #noise_dataset = dataset.clone()  # DataReader.read_data(filename_artifacts, ',')
 
         normalizer = Normalizer(noise_dataset)
         noise_dataset = normalizer.normalize_means(noise_dataset)
 
-        sub_set_size = 10
+        sub_set_size = 14
 
-        reconstructed_dataset = noise_dataset.project_pca(k=None, component_variance=0.50)
+        reconstructed_dataset = noise_dataset.project_pca(k=None, component_variance=0.90)
         reconstructed_dataset.add_means(normalizer.dimensions_means)
 
         # TODO: Project the principal components back to the original dataset
