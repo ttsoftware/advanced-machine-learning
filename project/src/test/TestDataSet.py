@@ -1,7 +1,6 @@
 import unittest
 
 from src.data.DataReader import DataReader
-from src.data.Normalizer import Normalizer
 from src.artifacts.Artificer import Artificer
 
 
