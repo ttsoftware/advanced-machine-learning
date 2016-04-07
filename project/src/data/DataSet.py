@@ -1,8 +1,5 @@
 import numpy as np
 
-from random import randrange
-from scipy.optimize import curve_fit
-
 from DataPoint import DataPoint
 
 
@@ -22,6 +19,8 @@ class DataSet(list):
                 if not type(x) == DataPoint:
                     val[i] = DataPoint(x)
             super(DataSet, self).__init__(val)
+
+        self.dimensions = len(np.array(self.unpack_params()).T)
 
     def unpack_params(self):
         """
@@ -48,17 +47,17 @@ class DataSet(list):
         """
         return map(lambda x: x.target, self)
 
-    def project_pca(self, k=2, component_variance=0.8, centroids=None):
+    def project_pca(self, k=2, component_variance=0.8):
         """
         Returns a new dataset reduced to k principal components (dimensions)
-        :type component_variance: float The threshold for principal component variance
-        :param centroids: Expects centroids to be of type dataset
-        :rtype : DataSet
+        :param component_variance: float The threshold for principal component variance
         :param k:
+        :rtype : DataSet
         """
         assert k < self.dimensions
 
-        data_transposed = np.array(self.unpack_params()).T
+        data = np.array(self.unpack_params())
+        data_transposed = data.T
 
         covariance = np.cov(data_transposed)
 
@@ -68,7 +67,7 @@ class DataSet(list):
         sorted_eig = map(lambda (i, x): (x, eigenvectors[i]), enumerate(eigenvalues))
         sorted_eig = sorted(sorted_eig, key=lambda e: e[0], reverse=False)
 
-        if not k:
+        if k is None:
             eigenvaluesum = sum(eigenvalues)
             eigenvaluethreshold = eigenvaluesum * component_variance
 
@@ -82,17 +81,21 @@ class DataSet(list):
                     break
 
             W = np.array([sorted_eig[i][1] for i in range(sorted_eig_threshold_index)])
-            W = np.append(W, [np.zeros(len(data_transposed))], axis=0)
         else:
             # we choose the smallest eigenvalues
             W = np.array([sorted_eig[i][1] for i in range(k)])
 
-        return DataSet(
-            map(
-                lambda x: DataPoint(np.dot(W, x.params).tolist()),
-                self if not centroids else centroids
-            )
-        )
+        eig_projection = np.empty([len(W), len(data)])
+        for t, datapoint in enumerate(data):
+            for q, eigenvector in enumerate(W):
+                eig_projection[q][t] = sum(datapoint*eigenvector)
+
+        reconstructed_data = np.empty(data_transposed.shape)
+        for j, eigen_component in enumerate(W.T):
+            for t, datapoint in enumerate(eig_projection.T):
+                reconstructed_data[j][t] = sum(eigen_component*datapoint)
+
+        return DataSet(reconstructed_data.T.tolist())
 
     def add_artifacts(self, k=None):
         """
@@ -107,20 +110,22 @@ class DataSet(list):
         # spike_range_start = randrange(0, len(rows))
         # spike_range_end = randrange(spike_range_start, (spike_range_start + len(rows)))
 
-        spike_range_start = 30
-        spike_range_end = 50
+        spike_range_start = 20
+        spike_range_end = 30
+
         spike_size = spike_range_end - spike_range_start
 
-        mean = np.array([np.mean(x) for x in data_transposed])
+        mean = np.mean(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
         cov = np.cov(data_transposed)
 
-        #divisor = np.array([0.01 for i in range(len(cov))])
+        # covariance matrix with smaller variance
+        divisor = np.array([1 for i in range(len(cov))])
+        cov_small = np.divide(cov, divisor)
 
-        #cov_big = np.divide(cov, divisor)
+        # sample from our gaussian
+        samples = np.random.multivariate_normal(mean, cov_small, spike_size)
 
-        samples = np.random.multivariate_normal(mean, cov, spike_size)
-
-        data[spike_range_start:spike_range_end] += samples
+        data[spike_range_start:spike_range_end] = samples
 
         noise_dataset = DataSet(data.tolist())
 
@@ -134,6 +139,13 @@ class DataSet(list):
                 self.unpack_params()
             )
         )
+
+    def add_means(self, means):
+        for i, datapoint in enumerate(self):
+            params = datapoint.params
+            for j, mean in enumerate(means):
+                params[j] += mean
+            self[i] = DataPoint(params)
 
     def sort(self, cmp=None, key=None, reverse=False):
         super(DataSet, self).sort(cmp=cmp, key=lambda x: x.params[0], reverse=reverse)
