@@ -1,11 +1,8 @@
 import unittest
 
-import numpy as np
-
 from src.data.DataReader import DataReader
 from src.data.Normalizer import Normalizer
-import src.artifacts.pca.PcaProjector as PCA
-import src.artifacts.Artificer as Artificer
+from src.artifacts.Artificer import Artificer
 
 
 class TestDataSet(unittest.TestCase):
@@ -16,14 +13,7 @@ class TestDataSet(unittest.TestCase):
 
         dataset = DataReader.read_data(filename, ',')
 
-        # Add random noise to 3 randomly chosen columns
-        # noise_dataset, spike_range = Artificer.add_artifacts(dataset)
-        noise_dataset = dataset.clone()  # DataReader.read_data(filename_artifacts, ',')
+        artificer = Artificer(dataset)
+        artificer.pca_reconstruction()
 
-        normalizer = Normalizer(noise_dataset)
-        noise_dataset = normalizer.subtract_means(noise_dataset)
-
-        reconstructed_dataset = PCA.project(noise_dataset, k=None, component_variance=0.50)
-        reconstructed_dataset = normalizer.add_means(reconstructed_dataset)
-
-        Artificer.visualize(dataset, noise_dataset, reconstructed_dataset)
+        artificer.visualize()

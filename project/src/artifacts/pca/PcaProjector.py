@@ -3,15 +3,14 @@ import numpy as np
 from src.data.DataSet import DataSet
 
 
-def project(dataset, k=2, component_variance=0.8):
+def project(dataset, threshold=0.8):
     """
-    Returns a new dataset reduced to k principal components (dimensions)
+    Returns a dataset that is reconstructed based on its principal components
+
     :param dataset: dataset to perform pca upon
-    :param component_variance: float The threshold for principal component variance
-    :param k:
+    :param threshold: float The threshold for principal component variance
     :rtype : DataSet
     """
-    assert k < dataset.dimensions
 
     data = np.array(dataset.unpack_params())
     data_transposed = data.T
@@ -24,23 +23,19 @@ def project(dataset, k=2, component_variance=0.8):
     sorted_eig = map(lambda (idx, x): (x, eigenvectors[idx]), enumerate(eigenvalues))
     sorted_eig = sorted(sorted_eig, key=lambda e: e[0], reverse=False)
 
-    if k is None:
-        eigenvaluesum = sum(eigenvalues)
-        eigenvaluethreshold = eigenvaluesum * component_variance
+    eigenvaluesum = sum(eigenvalues)
+    eigenvaluethreshold = eigenvaluesum * threshold
 
-        cumsum_sorted_eig = 0
-        sorted_eig_threshold_index = 0
-        for i in range(len(sorted_eig)):
-            if (cumsum_sorted_eig + sorted_eig[i][0]) < eigenvaluethreshold:
-                cumsum_sorted_eig += sorted_eig[i][0]
-            else:
-                sorted_eig_threshold_index = i
-                break
+    cumsum_sorted_eig = 0
+    sorted_eig_threshold_index = 0
+    for i in range(len(sorted_eig)):
+        if (cumsum_sorted_eig + sorted_eig[i][0]) < eigenvaluethreshold:
+            cumsum_sorted_eig += sorted_eig[i][0]
+        else:
+            sorted_eig_threshold_index = i
+            break
 
-        W = np.array([sorted_eig[i][1] for i in range(sorted_eig_threshold_index)])
-    else:
-        # we choose the smallest eigenvalues
-        W = np.array([sorted_eig[i][1] for i in range(k)])
+    W = np.array([sorted_eig[i][1] for i in range(sorted_eig_threshold_index)])
 
     eig_projection = np.empty([len(W), len(data)])
     for t, datapoint in enumerate(data):

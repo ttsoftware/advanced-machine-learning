@@ -1,64 +1,92 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import src.artifacts.pca.PcaProjector as PCA
 
 from src.data.DataSet import DataSet
+from src.data.Normalizer import Normalizer
 
 
-def add_artifacts(dataset, k=None):
-    """
-    Adds k noisy artifacts to self.
-    :param k:
-    :return:
-    """
-    data = np.array(dataset.unpack_params())
-    data_transposed = data.T
+class Artificer:
+    def __init__(self, dataset):
+        self.original_dataset = dataset
+        self.noise_dataset, self.spike_range = self.add_artifacts()
 
-    # random spike interval
-    # spike_range_start = randrange(0, len(rows))
-    # spike_range_end = randrange(spike_range_start, (spike_range_start + len(rows)))
+        self.normalizer = Normalizer(self.noise_dataset)
+        self.normalized_noise_dataset = self.normalizer.subtract_means(self.noise_dataset)
 
-    spike_range_start = 20
-    spike_range_end = 30
+        self.reconstructed_dataset = None
 
-    spike_size = spike_range_end - spike_range_start
+    def add_artifacts(self):
+        """
+        Adds artifacts to the original dataset
 
-    mean = np.mean(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
-    cov = np.cov(data_transposed)
+        :return: Dataset with artifacts
+        """
+        data = np.array(self.original_dataset.unpack_params())
+        data_transposed = data.T
 
-    # covariance matrix with smaller variance
-    divisor = np.array([1 for i in range(len(cov))])
-    cov_small = np.divide(cov, divisor)
+        # random spike interval
+        # spike_range_start = randrange(0, len(rows))
+        # spike_range_end = randrange(spike_range_start, (spike_range_start + len(rows)))
 
-    # sample from our gaussian
-    samples = np.random.multivariate_normal(mean, cov_small, spike_size)
+        spike_range_start = 20
+        spike_range_end = 30
 
-    data[spike_range_start:spike_range_end] = samples
+        spike_size = spike_range_end - spike_range_start
 
-    noise_dataset = DataSet(data.tolist())
+        mean = np.mean(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
+        cov = np.cov(data_transposed)
 
-    return noise_dataset, range(spike_range_start, spike_range_end)
+        # covariance matrix with smaller variance
+        divisor = np.array([1 for i in range(len(cov))])
+        cov_small = np.divide(cov, divisor)
 
+        # sample from our gaussian
+        samples = np.random.multivariate_normal(mean, cov_small, spike_size)
 
-def visualize(original_dataset, reconstructed_dataset, noise_dataset=None, components=10):
-    if noise_dataset:
-        noise_dataset = original_dataset
+        data[spike_range_start:spike_range_end] = samples
 
-    f, axarr = plt.subplots(components, 3)
-    axarr[0, 0].set_title('Original EEG')
-    axarr[0, 1].set_title('Noised EEG')
-    axarr[0, 2].set_title('Corrected EEG')
+        noise_dataset = DataSet(data.tolist())
 
-    for index, i in enumerate(range(components)):
-        axarr[index, 0].plot(np.array(original_dataset.unpack_params()).T[i])
-        axarr[index, 1].plot(np.array(noise_dataset.unpack_params()).T[i])
-        axarr[index, 2].plot(np.array(reconstructed_dataset.unpack_params()).T[i])
+        return noise_dataset, range(spike_range_start, spike_range_end)
 
-    # pca_dataset_columns = np.array(projection_dataset.unpack_params()).T
+    def pca_reconstruction(self, threshold=1):
+        """
+        Does PCA projection on the normalized noise dataset in order to reconstruct the original
+        dataset with artifacts removed
 
-    # for idx, j in enumerate(pca_dataset_columns):
-    #    axarr[idx, 3].plot(j)
+        TODO: proper threshold that is not based on percentage
 
-    # Fine-tune figure; hide x ticks for top plots and y ticks for right plots
-    plt.setp([a.get_xticklabels() for a in axarr[1, :]], visible=False)
-    plt.setp([a.get_yticklabels() for a in axarr[:, 2]], visible=True)
-    plt.show()
+        :param threshold: The threshold where the PCA projector will reject principal components
+        :return:
+        """
+        reconstructed_dataset = PCA.project(self.normalized_noise_dataset, threshold)
+        self.reconstructed_dataset = self.normalizer.add_means(reconstructed_dataset)
+
+    def visualize(self, components=10):
+        """
+        Visualizes the original dataset alongside the dataset with added artifacts
+        and the reconstructed dataset.
+
+        :param components: How many components should be realized, starting from component 0
+        :return: None
+        """
+        f, axarr = plt.subplots(components, 3)
+        axarr[0, 0].set_title('Original EEG')
+        axarr[0, 1].set_title('Noised EEG')
+        axarr[0, 2].set_title('Corrected EEG')
+
+        for index, i in enumerate(range(components)):
+            axarr[index, 0].plot(np.array(self.original_dataset.unpack_params()).T[i])
+            axarr[index, 1].plot(np.array(self.noise_dataset.unpack_params()).T[i])
+            axarr[index, 2].plot(np.array(self.reconstructed_dataset.unpack_params()).T[i])
+
+        # pca_dataset_columns = np.array(projection_dataset.unpack_params()).T
+
+        # for idx, j in enumerate(pca_dataset_columns):
+        #    axarr[idx, 3].plot(j)
+
+        # Fine-tune figure; hide x ticks for top plots and y ticks for right plots
+        plt.setp([a.get_xticklabels() for a in axarr[1, :]], visible=False)
+        plt.setp([a.get_yticklabels() for a in axarr[:, 2]], visible=True)
+        plt.show()
