@@ -67,6 +67,8 @@ class DataSet(list):
         sorted_eig = map(lambda (i, x): (x, eigenvectors[i]), enumerate(eigenvalues))
         sorted_eig = sorted(sorted_eig, key=lambda e: e[0], reverse=False)
 
+        print eigenvalues.tolist()
+
         if k is None:
             eigenvaluesum = sum(eigenvalues)
             eigenvaluethreshold = eigenvaluesum * component_variance
@@ -84,6 +86,8 @@ class DataSet(list):
         else:
             # we choose the smallest eigenvalues
             W = np.array([sorted_eig[i][1] for i in range(k)])
+
+        print len(W)
 
         eig_projection = np.empty([len(W), len(data)])
         for t, datapoint in enumerate(data):
@@ -110,7 +114,7 @@ class DataSet(list):
         # spike_range_start = randrange(0, len(rows))
         # spike_range_end = randrange(spike_range_start, (spike_range_start + len(rows)))
 
-        spike_range_start = 20
+        spike_range_start = 10
         spike_range_end = 30
 
         spike_size = spike_range_end - spike_range_start
@@ -119,7 +123,7 @@ class DataSet(list):
         cov = np.cov(data_transposed)
 
         # covariance matrix with smaller variance
-        divisor = np.array([1 for i in range(len(cov))])
+        divisor = np.array([0.1 for i in range(len(cov))])
         cov_small = np.divide(cov, divisor)
 
         # sample from our gaussian
