@@ -12,17 +12,17 @@ class TestDataSet(unittest.TestCase):
 
         dataset = DataReader.read_data(filename, ',')
 
-        #for idx in range(len(dataset) // 40):
-        #    current_dataset = DataSet(dataset[idx*40:(idx+1)*40])
-
-        #    artificer = Artificer(current_dataset)
-        #    artificer.pca_reconstruction()
-
-            # TODO: What do we want to do with each window?
+        # for idx in range(len(dataset) // 40):
+        #     current_dataset = DataSet(dataset[idx*40:(idx+1)*40])
+        #
+        #     artificer = Artificer(current_dataset)
+        #     artificer.pca_reconstruction()
+        #
+        #     # TODO: What do we want to do with each window?
 
         current_dataset = DataSet(dataset[40:81])
 
-        artificer = Artificer(current_dataset)
+        artificer = Artificer(current_dataset, add_artifacts=True)
         artificer.pca_reconstruction()
 
         artificer.visualize()
