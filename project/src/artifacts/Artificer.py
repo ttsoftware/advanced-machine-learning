@@ -12,10 +12,10 @@ class Artificer:
         if add_artifacts:
             self.noise_dataset = self.add_artifacts()
         else:
-            self.noise_dataset = dataset
+            self.noise_dataset = dataset.clone()
 
-        self.normalizer = Normalizer(dataset)
-        self.normalized_noise_dataset = self.normalizer.subtract_means(self.noise_dataset)
+        self.normalizer = Normalizer(dataset.clone())
+        self.normalized_noise_dataset = self.normalizer.subtract_means(self.noise_dataset.clone())
 
         self.reconstructed_dataset = None
 

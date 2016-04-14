@@ -24,11 +24,10 @@ def project(dataset, threshold=None):
     if threshold is not None:
         # Rejects all additional eigenvectors when the threshold is reached
         for idx, eigenvalue in enumerate(eigenvalues):
-            print threshold, eigenvalue
             if eigenvalue < threshold:
                 W += [eigenvectors[idx]]
     else:
-        W = eigenvectors
+        return dataset.clone(), max(eigenvalues)
 
     W = np.array(W)
 
