@@ -59,7 +59,7 @@ class Normalizer(object):
             inputset
         )
 
-    def normalize_means(self, inputset):
+    def subtract_means(self, inputset):
         """
 
         :param DataSet inputset:
@@ -76,3 +76,12 @@ class Normalizer(object):
         :return float list:
         """
         return map(lambda x: np.sqrt(x), self.dimensions_stds)
+
+    def add_means(self, dataset):
+        new_dataset = DataSet()
+        for i, datapoint in enumerate(dataset):
+            params = datapoint.params
+            for j, mean in enumerate(self.dimensions_means):
+                params[j] += mean
+            new_dataset += [DataPoint(params)]
+        return new_dataset

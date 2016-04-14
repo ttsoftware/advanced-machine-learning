@@ -47,60 +47,6 @@ class DataSet(list):
         """
         return map(lambda x: x.target, self)
 
-    def project_pca(self, k=2, component_variance=0.8):
-        """
-        Returns a new dataset reduced to k principal components (dimensions)
-        :param component_variance: float The threshold for principal component variance
-        :param k:
-        :rtype : DataSet
-        """
-        assert k < self.dimensions
-
-        data = np.array(self.unpack_params())
-        data_transposed = data.T
-
-        covariance = np.cov(data_transposed)
-
-        # eigenvectors and eigenvalues for the from the covariance matrix
-        eigenvalues, eigenvectors = np.linalg.eigh(covariance)
-
-        sorted_eig = map(lambda (i, x): (x, eigenvectors[i]), enumerate(eigenvalues))
-        sorted_eig = sorted(sorted_eig, key=lambda e: e[0], reverse=False)
-
-        print eigenvalues.tolist()
-
-        if k is None:
-            eigenvaluesum = sum(eigenvalues)
-            eigenvaluethreshold = eigenvaluesum * component_variance
-
-            cumsum_sorted_eig = 0
-            sorted_eig_threshold_index = 0
-            for i in range(len(sorted_eig)):
-                if (cumsum_sorted_eig + sorted_eig[i][0]) < eigenvaluethreshold:
-                    cumsum_sorted_eig += sorted_eig[i][0]
-                else:
-                    sorted_eig_threshold_index = i
-                    break
-
-            W = np.array([sorted_eig[i][1] for i in range(sorted_eig_threshold_index)])
-        else:
-            # we choose the smallest eigenvalues
-            W = np.array([sorted_eig[i][1] for i in range(k)])
-
-        print len(W)
-
-        eig_projection = np.empty([len(W), len(data)])
-        for t, datapoint in enumerate(data):
-            for q, eigenvector in enumerate(W):
-                eig_projection[q][t] = sum(datapoint*eigenvector)
-
-        reconstructed_data = np.empty(data_transposed.shape)
-        for j, eigen_component in enumerate(W.T):
-            for t, datapoint in enumerate(eig_projection.T):
-                reconstructed_data[j][t] = sum(eigen_component*datapoint)
-
-        return DataSet(reconstructed_data.T.tolist())
-
     def add_artifacts(self, k=None):
         """
         Adds k noisy artifacts to self.
@@ -121,44 +67,26 @@ class DataSet(list):
 
         mean = np.mean(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
         var = np.var(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
-        #cov = np.cov(data_transposed)
+        # cov = np.cov(data_transposed)
 
         # covariance matrix with smaller variance
-        #divisor = np.array([0.1 for i in range(len(cov))])
-        #cov_small = np.divide(cov, divisor)
+        # divisor = np.array([0.1 for i in range(len(cov))])
+        # cov_small = np.divide(cov, divisor)
 
         # sample from our gaussian
-        #samples = np.random.multivariate_normal(mean, cov_small, spike_size)
+        # samples = np.random.multivariate_normal(mean, cov_small, spike_size)
 
-        print  mean[0] + var[0] * np.sin((np.pi / spike_size)*10)
+        print  mean[0] + var[0] * np.sin((np.pi / spike_size) * 10)
         print data[0][0]
 
         for t in range(spike_range_start, spike_range_end):
-            d = np.sin((np.pi / spike_size)*(t - spike_range_start))
+            d = np.sin((np.pi / spike_size) * (t - spike_range_start))
             for position in range(len(data[t])):
-                data[t][position] = mean[position] + var[position] * d/6
-
-
+                data[t][position] = mean[position] + var[position] * d / 6
 
         noise_dataset = DataSet(data.tolist())
 
         return noise_dataset, range(spike_range_start, spike_range_end)
-
-    def project_W(self, W):
-        Winv = np.linalg.pinv(W)
-        return DataSet(
-            map(
-                lambda row: DataPoint(np.dot(Winv, row).tolist()),
-                self.unpack_params()
-            )
-        )
-
-    def add_means(self, means):
-        for i, datapoint in enumerate(self):
-            params = datapoint.params
-            for j, mean in enumerate(means):
-                params[j] += mean
-            self[i] = DataPoint(params)
 
     def sort(self, cmp=None, key=None, reverse=False):
         super(DataSet, self).sort(cmp=cmp, key=lambda x: x.params[0], reverse=reverse)
