@@ -8,7 +8,8 @@ from src.data.DataSet import DataSet
 class TestDataSet(unittest.TestCase):
     def test_pca(self):
 
-        filename = '../../data/subject1_csv/eeg_200605191428_epochs/small.csv'
+        #filename = '../../data/subject1_csv/eeg_200605191428_epochs/small.csv'
+        filename = '../../data/emotiv/EEG_Data_filtered.csv'
 
         dataset = DataReader.read_data(filename, ',')
 
