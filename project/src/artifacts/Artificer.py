@@ -11,8 +11,8 @@ class Artificer:
         self.original_dataset = dataset
         self.noise_dataset, self.spike_range = self.add_artifacts()
 
-        self.normalizer = Normalizer(dataset if add_artifacts else self.noise_dataset)
-        self.normalized_noise_dataset = self.normalizer.subtract_means(self.noise_dataset)
+        self.normalizer = Normalizer(dataset)
+        self.normalized_noise_dataset = self.normalizer.subtract_means(self.noise_dataset if add_artifacts else dataset)
 
         self.reconstructed_dataset = None
 
@@ -45,19 +45,16 @@ class Artificer:
         # sample from our gaussian
         # samples = np.random.multivariate_normal(mean, cov_small, spike_size)
 
-        print mean[0] + var[0] * np.sin((np.pi / spike_size) * 10)
-        print data[0][0]
-
         for t in range(spike_range_start, spike_range_end):
             d = np.sin((np.pi / spike_size) * (t - spike_range_start))
             for position in range(len(data[t])):
-                data[t][position] = mean[position] + var[position] * d / 6
+                data[t][position] = mean[position] + var[position] * d * 1000
 
         noise_dataset = DataSet(data.tolist())
 
         return noise_dataset, range(spike_range_start, spike_range_end)
 
-    def pca_reconstruction(self, threshold=1):
+    def pca_reconstruction(self, threshold=None):
         """
         Does PCA projection on the normalized noise dataset in order to reconstruct the original
         dataset with artifacts removed
@@ -67,8 +64,9 @@ class Artificer:
         :param threshold: The threshold where the PCA projector will reject principal components
         :return:
         """
-        reconstructed_dataset = PCA.project(self.normalized_noise_dataset, threshold)
+        reconstructed_dataset, max_eigenvalue = PCA.project(self.normalized_noise_dataset, threshold)
         self.reconstructed_dataset = self.normalizer.add_means(reconstructed_dataset)
+        return max_eigenvalue
 
     def visualize(self, components=10):
         """

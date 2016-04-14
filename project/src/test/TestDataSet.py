@@ -12,17 +12,15 @@ class TestDataSet(unittest.TestCase):
 
         dataset = DataReader.read_data(filename, ',')
 
-        # for idx in range(len(dataset) // 40):
-        #     current_dataset = DataSet(dataset[idx*40:(idx+1)*40])
-        #
-        #     artificer = Artificer(current_dataset)
-        #     artificer.pca_reconstruction()
-        #
-        #     # TODO: What do we want to do with each window?
+        threshold = 0
+        for idx in range(len(dataset) // 40):
+            current_dataset = DataSet(dataset[idx*40:(idx+1)*40])
 
-        current_dataset = DataSet(dataset[40:81])
+            artificer = Artificer(current_dataset, add_artifacts=(True if idx > 10 else False))
+            max_eigenvalue = artificer.pca_reconstruction(threshold if idx > 10 else None)
 
-        artificer = Artificer(current_dataset, add_artifacts=True)
-        artificer.pca_reconstruction()
+            threshold = max(threshold, max_eigenvalue)
 
-        artificer.visualize()
+            if idx > 10:
+                artificer.visualize()
+                break
