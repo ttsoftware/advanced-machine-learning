@@ -9,10 +9,13 @@ from src.data.Normalizer import Normalizer
 class Artificer:
     def __init__(self, dataset, add_artifacts=False):
         self.original_dataset = dataset
-        self.noise_dataset = self.add_artifacts()
+        if add_artifacts:
+            self.noise_dataset = self.add_artifacts()
+        else:
+            self.noise_dataset = dataset
 
         self.normalizer = Normalizer(dataset)
-        self.normalized_noise_dataset = self.normalizer.subtract_means(self.noise_dataset if add_artifacts else dataset)
+        self.normalized_noise_dataset = self.normalizer.subtract_means(self.noise_dataset)
 
         self.reconstructed_dataset = None
 
@@ -24,11 +27,6 @@ class Artificer:
         """
         data = np.array(self.original_dataset.unpack_params())
         data_transposed = data.T
-
-        # random spike interval
-        # spike_range_start = randrange(0, len(rows))
-        # spike_range_end = randrange(spike_range_start, (spike_range_start + len(rows)))
-
 
         mean = np.mean(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
         var = np.var(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
@@ -61,6 +59,7 @@ class Artificer:
         """
         reconstructed_dataset, max_eigenvalue = PCA.project(self.normalized_noise_dataset, threshold)
         self.reconstructed_dataset = self.normalizer.add_means(reconstructed_dataset)
+
         return max_eigenvalue
 
     def visualize(self, components=14):
@@ -78,6 +77,6 @@ class Artificer:
         for index, i in enumerate(range(components)):
             axarr[index].plot(np.array(self.original_dataset.unpack_params()).T[i], color='y')
             axarr[index].plot(np.array(self.noise_dataset.unpack_params()).T[i], color='r')
-            axarr[index].plot(np.array(self.reconstructed_dataset.unpack_params()).T[i], color='b')
+            # axarr[index].plot(np.array(self.reconstructed_dataset.unpack_params()).T[i], color='b')
 
         plt.savefig("figure_artifact", papertype='a0', pad_inches=0, bbox_inches=0, frameon=False)

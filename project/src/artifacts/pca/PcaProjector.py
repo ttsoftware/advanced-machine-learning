@@ -21,7 +21,7 @@ def project(dataset, threshold=None):
     eigenvalues, eigenvectors = np.linalg.eigh(covariance)
 
     W = []
-    if threshold:
+    if threshold is not None:
         # Rejects all additional eigenvectors when the threshold is reached
         for idx, eigenvalue in enumerate(eigenvalues):
             print threshold, eigenvalue
