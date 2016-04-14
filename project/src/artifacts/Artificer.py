@@ -7,11 +7,11 @@ from src.data.Normalizer import Normalizer
 
 
 class Artificer:
-    def __init__(self, dataset):
+    def __init__(self, dataset, add_artifacts=False):
         self.original_dataset = dataset
         self.noise_dataset = self.add_artifacts()
 
-        self.normalizer = Normalizer(self.noise_dataset)
+        self.normalizer = Normalizer(dataset if add_artifacts else self.noise_dataset)
         self.normalized_noise_dataset = self.normalizer.subtract_means(self.noise_dataset)
 
         self.reconstructed_dataset = None
