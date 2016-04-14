@@ -14,7 +14,7 @@ class TestDataSet(unittest.TestCase):
         filename_artifacts = '../../data/subject1_csv/eeg_200605191428_epochs/tiny_artifacts.csv'
 
         dataset = DataReader.read_data(filename, ',')
-        dataset = DataSet(dataset[390:450])
+        dataset = DataSet(dataset[0:500])
 
         # Add random noise to 3 randomly chosen columns
         noise_dataset, spike_range = dataset.add_artifacts()
