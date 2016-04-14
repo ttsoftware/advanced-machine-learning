@@ -11,8 +11,8 @@ class Artificer:
         self.original_dataset = dataset
         self.noise_dataset = self.add_artifacts()
 
-        self.normalizer = Normalizer(dataset if add_artifacts else self.noise_dataset)
-        self.normalized_noise_dataset = self.normalizer.subtract_means(self.noise_dataset)
+        self.normalizer = Normalizer(dataset)
+        self.normalized_noise_dataset = self.normalizer.subtract_means(self.noise_dataset if add_artifacts else dataset)
 
         self.reconstructed_dataset = None
 
@@ -49,7 +49,7 @@ class Artificer:
             for position in range(len(data[t])):
                 data[t][position] += d * factors[position]
 
-    def pca_reconstruction(self, threshold=1):
+    def pca_reconstruction(self, threshold=None):
         """
         Does PCA projection on the normalized noise dataset in order to reconstruct the original
         dataset with artifacts removed
@@ -59,8 +59,9 @@ class Artificer:
         :param threshold: The threshold where the PCA projector will reject principal components
         :return:
         """
-        reconstructed_dataset = PCA.project(self.normalized_noise_dataset, threshold)
+        reconstructed_dataset, max_eigenvalue = PCA.project(self.normalized_noise_dataset, threshold)
         self.reconstructed_dataset = self.normalizer.add_means(reconstructed_dataset)
+        return max_eigenvalue
 
     def visualize(self, components=14):
         """
