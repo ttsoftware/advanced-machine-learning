@@ -16,11 +16,11 @@ class Artificer:
 
         self.reconstructed_dataset = None
 
-    def add_artifacts(self):
+    def add_artifacts(self, k=None):
         """
-        Adds artifacts to the original dataset
-
-        :return: Dataset with artifacts
+        Adds k noisy artifacts to self.
+        :param k:
+        :return:
         """
         data = np.array(self.original_dataset.unpack_params())
         data_transposed = data.T
@@ -29,22 +29,29 @@ class Artificer:
         # spike_range_start = randrange(0, len(rows))
         # spike_range_end = randrange(spike_range_start, (spike_range_start + len(rows)))
 
-        spike_range_start = 20
-        spike_range_end = 30
+        spike_range_start = 10
+        spike_range_end = 20
 
         spike_size = spike_range_end - spike_range_start
 
         mean = np.mean(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
-        cov = np.cov(data_transposed)
+        var = np.var(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
+        # cov = np.cov(data_transposed)
 
         # covariance matrix with smaller variance
-        divisor = np.array([1 for i in range(len(cov))])
-        cov_small = np.divide(cov, divisor)
+        # divisor = np.array([0.1 for i in range(len(cov))])
+        # cov_small = np.divide(cov, divisor)
 
         # sample from our gaussian
-        samples = np.random.multivariate_normal(mean, cov_small, spike_size)
+        # samples = np.random.multivariate_normal(mean, cov_small, spike_size)
 
-        data[spike_range_start:spike_range_end] = samples
+        print mean[0] + var[0] * np.sin((np.pi / spike_size) * 10)
+        print data[0][0]
+
+        for t in range(spike_range_start, spike_range_end):
+            d = np.sin((np.pi / spike_size) * (t - spike_range_start))
+            for position in range(len(data[t])):
+                data[t][position] = mean[position] + var[position] * d / 6
 
         noise_dataset = DataSet(data.tolist())
 
