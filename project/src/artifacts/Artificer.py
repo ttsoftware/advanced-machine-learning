@@ -12,10 +12,10 @@ class Artificer:
         if add_artifacts:
             self.noise_dataset = self.add_artifacts()
         else:
-            self.noise_dataset = dataset
+            self.noise_dataset = dataset.clone()
 
-        self.normalizer = Normalizer(dataset)
-        self.normalized_noise_dataset = self.normalizer.subtract_means(self.noise_dataset)
+        self.normalizer = Normalizer(dataset.clone())
+        self.normalized_noise_dataset = self.normalizer.subtract_means(self.noise_dataset.clone())
 
         self.reconstructed_dataset = None
 
@@ -31,7 +31,7 @@ class Artificer:
         mean = np.mean(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
         var = np.var(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
 
-        self.sine_artifact(10, 14, data, mean, var)
+        self.sine_artifact(5, 35, data, mean, var)
 
         noise_dataset = DataSet(data.tolist())
 
@@ -39,7 +39,7 @@ class Artificer:
 
     def sine_artifact(self, spike_range_start, spike_range_end, data, mean, var):
 
-        factors = np.linspace(1, 80, len(data[0]))
+        factors = [0, 0, 0, 0, 1, 1, 1, 1, 3, 4, 40, 100, 300, 800] # np.linspace(1, 80, len(data[0]))
 
         for t in range(spike_range_start, spike_range_end):
             d = np.sin((np.pi / (spike_range_end - spike_range_start)) * (t - spike_range_start))
@@ -77,6 +77,6 @@ class Artificer:
         for index, i in enumerate(range(components)):
             axarr[index].plot(np.array(self.original_dataset.unpack_params()).T[i], color='y')
             axarr[index].plot(np.array(self.noise_dataset.unpack_params()).T[i], color='r')
-            # axarr[index].plot(np.array(self.reconstructed_dataset.unpack_params()).T[i], color='b')
+            axarr[index].plot(np.array(self.reconstructed_dataset.unpack_params()).T[i], color='b')
 
         plt.savefig("figure_artifact", papertype='a0', pad_inches=0, bbox_inches=0, frameon=False)

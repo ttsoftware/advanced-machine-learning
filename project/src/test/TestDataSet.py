@@ -23,8 +23,7 @@ class TestDataSet(unittest.TestCase):
                 threshold = max(threshold, max_eigenvalue)
             else:
                 artificer = Artificer(current_dataset, add_artifacts=True)
-                max_eigenvalue = artificer.pca_reconstruction(threshold)
-
-            if idx > 10:
+                artificer.pca_reconstruction(threshold)
                 artificer.visualize()
                 break
+
