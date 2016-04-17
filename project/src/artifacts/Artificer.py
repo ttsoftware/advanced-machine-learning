@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import src.artifacts.pca.PcaProjector as PCA
 
-from src.data.DataSet import DataSet
-from src.data.Normalizer import Normalizer
+from src.Data.DataSet import DataSet
+from src.Data.Normalizer import Normalizer
 
 
 class Artificer:
@@ -57,10 +57,10 @@ class Artificer:
         :param threshold: The threshold where the PCA projector will reject principal components
         :return:
         """
-        reconstructed_dataset, max_eigenvalue = PCA.project(self.normalized_noise_dataset, threshold)
+        reconstructed_dataset, max_eigenvalue, rejected = PCA.project(self.normalized_noise_dataset, threshold)
         self.reconstructed_dataset = self.normalizer.add_means(reconstructed_dataset)
 
-        return max_eigenvalue
+        return max_eigenvalue, rejected
 
     def visualize(self, components=14):
         """

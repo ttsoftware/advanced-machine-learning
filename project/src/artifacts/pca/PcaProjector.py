@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.data.DataSet import DataSet
+from src.Data.DataSet import DataSet
 
 
 def project(dataset, threshold=None):
@@ -21,14 +21,17 @@ def project(dataset, threshold=None):
     eigenvalues, eigenvectors = np.linalg.eigh(covariance)
 
     W = []
+    rejected = False
     if threshold is not None:
         # Rejects all additional eigenvectors when the threshold is reached
         for idx, eigenvalue in enumerate(eigenvalues):
             if eigenvalue < threshold:
                 W += [eigenvectors[idx]]
-        print len(W)
+            else:
+                rejected = True
+        #print len(W)
     else:
-        return dataset.clone(), sum(eigenvalues) / len(eigenvalues)
+        return dataset.clone(), sum(eigenvalues) / len(eigenvalues), rejected
 
     W = np.array(W)
 
@@ -44,4 +47,4 @@ def project(dataset, threshold=None):
         for t, datapoint in enumerate(eig_projection.T):
             reconstructed_data[j][t] = sum(eigen_component * datapoint)
 
-    return DataSet(reconstructed_data.T.tolist()), sum(eigenvalues) / len(eigenvalues)
+    return DataSet(reconstructed_data.T.tolist()), sum(eigenvalues) / len(eigenvalues), rejected

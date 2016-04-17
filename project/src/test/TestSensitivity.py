@@ -1,8 +1,13 @@
+from __future__ import division
 import matplotlib.pyplot as plt
 import numpy as np
+import random
+
 from src.Data.DataReader import DataReader
 from src.Data.Normalizer import Normalizer
 from src.Data.DataSet import DataSet
+from src.artifacts.Artificer import Artificer
+
 
 def mean_square(pca, old):
    new_data = np.array(pca.unpack_params())
@@ -13,37 +18,61 @@ def mean_square(pca, old):
            sum += np.power(new_data[i][j] - old_data[i][j],2)
    return sum/(len(new_data) * len(new_data[i]))
 
-def test_pca():
-    filename = '../../data/emotiv/EEG_Data_filtered.csv'
-    filename_artifacts = '../../data/subject1_csv/eeg_200605191428_epochs/tiny_artifacts.csv'
+def get_sensitivity_specificity():
+    # filename = '../../data/subject1_csv/eeg_200605191428_epochs/small.csv'
+        filename = '../../data/emotiv/EEG_Data_filtered.csv'
 
-    dataset = DataReader.read_data(filename, ',')
-    dataset = DataSet(dataset[0:500])
+        dataset = DataReader.read_data(filename, ',')
+        nb_windows = 0
+        nb_no_added = 0
+        nb_added = 0
+        nb_no_added_no_removed = 0
+        nb_no_added_removed = 0
+        nb_added_no_removed = 0
+        nb_added_removed = 0
 
-    # Add random noise to 3 randomly chosen columns
-    noise_dataset, spike_range = dataset.add_artifacts()
-    # noise_dataset = dataset.clone()  # DataReader.read_data(filename_artifacts, ',')
+        threshold = 0
+        for idx in range(len(dataset) // 40):
+            current_dataset = DataSet(dataset[idx*40:(idx+1)*40])
 
-    normalizer = Normalizer(noise_dataset)
-    noise_dataset = normalizer.normalize_means(noise_dataset)
+            if idx < 10:
+                artificer = Artificer(current_dataset, add_artifacts=False)
+                max_eigenvalue = artificer.pca_reconstruction()[0]
+                threshold = max(threshold, max_eigenvalue)
+            else:
+                nb_windows += 1
+                decision = random.randrange(0,2)
+                if decision == 0:
+                    nb_no_added += 1
+                    artificer = Artificer(current_dataset, add_artifacts=False)
+                    rejected = artificer.pca_reconstruction(threshold)[1]
+                    if rejected:
+                        nb_no_added_removed += 1
+                    else:
+                        nb_no_added_no_removed +=1
+                    #artificer.visualize()
+                else:
+                    nb_added += 1
+                    artificer = Artificer(current_dataset, add_artifacts=True)
+                    rejected = artificer.pca_reconstruction(threshold)[1]
+                    if rejected:
+                        nb_added_removed += 1
+                    else:
+                        nb_added_no_removed += 1
+                    #artificer.visualize()
 
-    sub_set_size = 14
+        print 'Number of windows without artifacts: ', nb_no_added
+        print 'Number of windows with artifacts: ', nb_added
 
-    reconstructed_dataset = noise_dataset.project_pca(k=None, component_variance=0.90)
-    reconstructed_dataset.add_means(normalizer.dimensions_means)
+        print 'True positive: ', nb_added_removed
+        print 'True negative: ', nb_no_added_no_removed
+        print 'False positive: ', nb_no_added_removed
+        print 'False negative: ', nb_added_no_removed
 
-    noise_dataset.add_means(normalizer.dimensions_means)
+        print 'Sensitivity: ', (nb_added_removed)/(nb_added_removed + nb_added_no_removed)
+        print 'Specificity: ', (nb_added_no_removed)/(nb_no_added_no_removed + nb_no_added_removed)
 
-    # TODO: Project the principal components back to the original dataset
 
-    f, axarr = plt.subplots(sub_set_size, 1)
-    axarr[0].set_title('Corrected EEG')
-
-    for index, i in enumerate(range(sub_set_size)):
-        axarr[index].plot(np.array(noise_dataset.unpack_params()).T[i], color='r')
-        axarr[index].plot(np.array(reconstructed_dataset.unpack_params()).T[i], color='b')
-
-    plt.show()
 
 
 def plot_mse():
@@ -82,4 +111,4 @@ def plot_mse():
     axarr[1].set_xlabel('Variance threshold for PCA components')
     plt.show()
 
-test_pca()
+get_sensitivity_specificity()
