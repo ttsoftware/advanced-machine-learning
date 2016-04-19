@@ -31,6 +31,12 @@ def get_sensitivity_specificity():
         nb_added_no_removed = 0
         nb_added_removed = 0
 
+        sum_mse =0
+        sum_mse_no_artifacts = 0
+        sum_mse_artifacts = 0
+        nb_with_artifacts = 0
+        nb_without_artifacts = 0
+
         threshold = 0
         for idx in range(len(dataset) // 40):
             current_dataset = DataSet(dataset[idx*40:(idx+1)*40])
@@ -46,6 +52,11 @@ def get_sensitivity_specificity():
                     nb_no_added += 1
                     artificer = Artificer(current_dataset, add_artifacts=False)
                     rejected = artificer.pca_reconstruction(threshold)[1]
+                    mse = artificer.mse()
+                    sum_mse += mse[0]
+                    sum_mse_no_artifacts += mse[2]
+                    nb_without_artifacts += mse[4]
+
                     if rejected:
                         nb_no_added_removed += 1
                     else:
@@ -55,11 +66,18 @@ def get_sensitivity_specificity():
                     nb_added += 1
                     artificer = Artificer(current_dataset, add_artifacts=True)
                     rejected = artificer.pca_reconstruction(threshold)[1]
+                    mse = artificer.mse()
+                    sum_mse += mse[0]
+                    sum_mse_artifacts += mse[1]
+                    sum_mse_no_artifacts += mse[2]
+                    nb_with_artifacts += mse[3]
+                    nb_without_artifacts += mse[4]
                     if rejected:
                         nb_added_removed += 1
                     else:
                         nb_added_no_removed += 1
-                    #artificer.visualize()
+
+        artificer.visualize()
 
         print 'Number of windows without artifacts: ', nb_no_added
         print 'Number of windows with artifacts: ', nb_added
@@ -71,6 +89,16 @@ def get_sensitivity_specificity():
 
         print 'Sensitivity: ', (nb_added_removed)/(nb_added_removed + nb_added_no_removed)
         print 'Specificity: ', (nb_added_no_removed)/(nb_no_added_no_removed + nb_no_added_removed)
+
+        print 'Mean squared error on dataset: ', sum_mse/(len(dataset.unpack_params() * len(dataset.unpack_params()[0])) - 10*40*14)
+        print 'Mean squared error on segments with artifacts: ', sum_mse_artifacts/nb_with_artifacts
+        print 'Mean squared error on segments with no artifacts: ', sum_mse_no_artifacts/nb_without_artifacts
+        print sum_mse_artifacts
+        print nb_with_artifacts
+        print sum_mse_no_artifacts
+        print nb_without_artifacts
+        print len(artificer.original_dataset.unpack_params()[0])
+
 
 
 
