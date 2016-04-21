@@ -7,7 +7,6 @@ from DataSet import DataSet
 
 
 class Normalizer(object):
-
     def __init__(self, dataset):
         self.dataset = dataset.clone()
         self.values = self.dataset.unpack_params()
@@ -34,7 +33,6 @@ class Normalizer(object):
         """
         normalized_dataset = DataSet()
         for i, data_point in enumerate(inputset):
-
             normalized_dataset += [DataPoint(
                 params=map(
                     lambda (dim, val): normalize_function(dim, val),
@@ -61,7 +59,6 @@ class Normalizer(object):
 
     def subtract_means(self, inputset):
         """
-
         :param DataSet inputset:
         :return DataSet:
         """
