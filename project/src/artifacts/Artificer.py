@@ -47,13 +47,17 @@ class Artificer:
 
     def sine_artifact(self, spike_range_start, spike_range_end, data, mean, var):
 
-        self.factors = [0, 0, 0, 0, 1, 1, 1, 1, 3, 4, 40, 100, 300, 800]  # np.linspace(1, 80, len(data[0]))
+        self.factors = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 3, 4, 40, 100, 300, 800, 400, 50, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # np.linspace(1, 80, len(data[0]))
 
         for t in range(spike_range_start, spike_range_end):
             d = np.sin((np.pi / (spike_range_end - spike_range_start)) * (t - spike_range_start))
 
             for position in range(len(data[t])):
                 data[t][position] += d * self.factors[position]
+
+    def put_artifacts(self):
+        self.noise_dataset = self.add_artifacts()
+        self.normalized_noise_dataset = self.normalizer.subtract_means(self.noise_dataset.clone())
 
     def pca_reconstruction(self, threshold=None):
         """
