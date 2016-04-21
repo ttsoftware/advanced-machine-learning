@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import src.artifacts.pca.PcaProjector as PCA
 
-from src.Data.DataSet import DataSet
-from src.Data.Normalizer import Normalizer
+from src.data.DataSet import DataSet
+from src.data.Normalizer import Normalizer
 
 
 class Artificer:
@@ -42,7 +42,7 @@ class Artificer:
 
     def sine_artifact(self, spike_range_start, spike_range_end, data, mean, var):
 
-        self.factors = [0, 0, 0, 0, 1, 1, 1, 1, 3, 4, 40, 100, 300, 800] # np.linspace(1, 80, len(data[0]))
+        self.factors = [0, 0, 0, 0, 1, 1, 1, 1, 3, 4, 40, 100, 300, 800]  # np.linspace(1, 80, len(data[0]))
 
         for t in range(spike_range_start, spike_range_end):
             d = np.sin((np.pi / (spike_range_end - spike_range_start)) * (t - spike_range_start))
@@ -88,22 +88,27 @@ class Artificer:
         new_data = np.array(self.original_dataset.unpack_params())
         old_data = np.array(self.reconstructed_dataset.unpack_params())
         sum_all_dataset = 0
-        sum_with_artifacts =0
-        sum_without_artifacts =0
+        sum_with_artifacts = 0
+        sum_without_artifacts = 0
         nb_datapoints_with_artifacts = 0
         nb_datapoints_without_artifacts = 0
+
         for i in range(len(new_data)):
-           for j in range(len(new_data[i])):
-                sum_all_dataset += np.power(new_data[i][j] - old_data[i][j],2)
-                if(self.has_artifacts and i>=self.spike_range_start and i<=self.spike_range_end):
-                    if(self.factors[j]>0):
-                        sum_with_artifacts += np.power(new_data[i][j] - old_data[i][j],2)
-                        nb_datapoints_with_artifacts +=1
+
+            for j in range(len(new_data[i])):
+
+                sum_all_dataset += np.power(new_data[i][j] - old_data[i][j], 2)
+
+                if self.has_artifacts and self.spike_range_start <= i <= self.spike_range_end:
+
+                    if self.factors[j] > 0:
+                        sum_with_artifacts += np.power(new_data[i][j] - old_data[i][j], 2)
+                        nb_datapoints_with_artifacts += 1
                     else:
-                        sum_without_artifacts += np.power(new_data[i][j] - old_data[i][j],2)
-                        nb_datapoints_without_artifacts +=1
+                        sum_without_artifacts += np.power(new_data[i][j] - old_data[i][j], 2)
+                        nb_datapoints_without_artifacts += 1
                 else:
-                    sum_without_artifacts += np.power(new_data[i][j] - old_data[i][j],2)
-                    nb_datapoints_without_artifacts +=1
+                    sum_without_artifacts += np.power(new_data[i][j] - old_data[i][j], 2)
+                    nb_datapoints_without_artifacts += 1
 
         return sum_all_dataset, sum_with_artifacts, sum_without_artifacts, nb_datapoints_with_artifacts, nb_datapoints_without_artifacts

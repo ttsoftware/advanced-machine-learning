@@ -1,25 +1,29 @@
 from __future__ import division
+
+import unittest
+
 import matplotlib.pyplot as plt
 import numpy as np
 import random
 
-from src.Data.DataReader import DataReader
-from src.Data.Normalizer import Normalizer
-from src.Data.DataSet import DataSet
 from src.artifacts.Artificer import Artificer
+from src.data.DataReader import DataReader
+from src.data.DataSet import DataSet
+from src.data.Normalizer import Normalizer
 
 
-def mean_square(pca, old):
-   new_data = np.array(pca.unpack_params())
-   old_data = np.array(old.unpack_params())
-   sum = 0
-   for i in range(len(new_data)):
-       for j in range(len(new_data[i])):
-           sum += np.power(new_data[i][j] - old_data[i][j],2)
-   return sum/(len(new_data) * len(new_data[i]))
+class TestDataSet(unittest.TestCase):
+    def mean_square(pca, old):
+        new_data = np.array(pca.unpack_params())
+        old_data = np.array(old.unpack_params())
+        sum = 0
+        for i in range(len(new_data)):
+            for j in range(len(new_data[i])):
+                sum += np.power(new_data[i][j] - old_data[i][j], 2)
+        return sum / (len(new_data) * len(new_data[i]))
 
-def get_sensitivity_specificity():
-    # filename = '../../data/subject1_csv/eeg_200605191428_epochs/small.csv'
+    def test_sensitivity_specificity(self):
+        # filename = '../../data/subject1_csv/eeg_200605191428_epochs/small.csv'
         filename = '../../data/emotiv/EEG_Data_filtered.csv'
 
         dataset = DataReader.read_data(filename, ',')
@@ -31,7 +35,7 @@ def get_sensitivity_specificity():
         nb_added_no_removed = 0
         nb_added_removed = 0
 
-        sum_mse =0
+        sum_mse = 0
         sum_mse_no_artifacts = 0
         sum_mse_artifacts = 0
         nb_with_artifacts = 0
@@ -39,7 +43,7 @@ def get_sensitivity_specificity():
 
         threshold = 0
         for idx in range(len(dataset) // 40):
-            current_dataset = DataSet(dataset[idx*40:(idx+1)*40])
+            current_dataset = DataSet(dataset[idx * 40:(idx + 1) * 40])
 
             if idx < 10:
                 artificer = Artificer(current_dataset, add_artifacts=False)
@@ -47,7 +51,7 @@ def get_sensitivity_specificity():
                 threshold = max(threshold, max_eigenvalue)
             else:
                 nb_windows += 1
-                decision = random.randrange(0,2)
+                decision = random.randrange(0, 2)
                 if decision == 0:
                     nb_no_added += 1
                     artificer = Artificer(current_dataset, add_artifacts=False)
@@ -60,8 +64,8 @@ def get_sensitivity_specificity():
                     if rejected:
                         nb_no_added_removed += 1
                     else:
-                        nb_no_added_no_removed +=1
-                    #artificer.visualize()
+                        nb_no_added_no_removed += 1
+                        # artificer.visualize()
                 else:
                     nb_added += 1
                     artificer = Artificer(current_dataset, add_artifacts=True)
@@ -87,56 +91,51 @@ def get_sensitivity_specificity():
         print 'False positive: ', nb_no_added_removed
         print 'False negative: ', nb_added_no_removed
 
-        print 'Sensitivity: ', (nb_added_removed)/(nb_added_removed + nb_added_no_removed)
-        print 'Specificity: ', (nb_added_no_removed)/(nb_no_added_no_removed + nb_no_added_removed)
+        print 'Sensitivity: ', (nb_added_removed) / (nb_added_removed + nb_added_no_removed)
+        print 'Specificity: ', (nb_added_no_removed) / (nb_no_added_no_removed + nb_no_added_removed)
 
-        print 'Mean squared error on dataset: ', sum_mse/(len(dataset.unpack_params() * len(dataset.unpack_params()[0])) - 10*40*14)
-        print 'Mean squared error on segments with artifacts: ', sum_mse_artifacts/nb_with_artifacts
-        print 'Mean squared error on segments with no artifacts: ', sum_mse_no_artifacts/nb_without_artifacts
+        print 'Mean squared error on dataset: ', sum_mse / (
+            len(dataset.unpack_params() * len(dataset.unpack_params()[0])) - 10 * 40 * 14)
+        print 'Mean squared error on segments with artifacts: ', sum_mse_artifacts / nb_with_artifacts
+        print 'Mean squared error on segments with no artifacts: ', sum_mse_no_artifacts / nb_without_artifacts
         print sum_mse_artifacts
         print nb_with_artifacts
         print sum_mse_no_artifacts
         print nb_without_artifacts
         print len(artificer.original_dataset.unpack_params()[0])
 
+    def test_plot_mse(self):
+        filename = '../../data/subject1_csv/eeg_200605191428_epochs/small.csv'
 
+        dataset = DataReader.read_data(filename, ',')
 
+        normalizer = Normalizer(dataset)
+        dataset = normalizer.normalize_means_std(dataset)
 
+        old_dataset = dataset.clone()
 
-def plot_mse():
-    filename = '../../data/subject1_csv/eeg_200605191428_epochs/small.csv'
+        # Add random noise to 3 randomly chosen columns
+        noisy_set, noise_interval = dataset.add_artifacts()
+        artifact_set = noisy_set[noise_interval[0]:noise_interval[1]]
 
-    dataset = DataReader.read_data(filename, ',')
+        mses = []
+        mses2 = []
+        variances = []
 
-    normalizer = Normalizer(dataset)
-    dataset = normalizer.normalize_means(dataset)
+        for variance in np.linspace(0.7, 0.99, num=5):
+            print variance
+            projection_dataset = noisy_set.project_pca(k=None, component_variance=variance)
+            artifact_set_pca = projection_dataset[noise_interval[0]:noise_interval[1]]
+            mse = self.mean_square(projection_dataset, old_dataset)
+            mses.append(mse)
+            mse2 = self.mean_square(DataSet(artifact_set_pca), DataSet(artifact_set))
+            mses2.append(mse2)
+            variances.append(variance)
 
-    old_dataset = dataset.clone()
-
-    # Add random noise to 3 randomly chosen columns
-    noisy_set, noise_interval = dataset.add_artifacts()
-    artifact_set = noisy_set[noise_interval[0]:noise_interval[1]]
-
-    mses = []
-    mses2 = []
-    variances = []
-
-    for variance in np.linspace(0.7,0.99, num=5):
-        print variance
-        projection_dataset = noisy_set.project_pca(k=None, component_variance=variance)
-        artifact_set_pca = projection_dataset[noise_interval[0]:noise_interval[1]]
-        mse = mean_square(projection_dataset, old_dataset)
-        mses.append(mse)
-        mse2 = mean_square(DataSet(artifact_set_pca), DataSet(artifact_set))
-        mses2.append(mse2)
-        variances.append(variance)
-
-    f, axarr = plt.subplots(2, 1)
-    axarr[0].set_title('For all dataset')
-    axarr[1].set_title('For sections with artifacts')
-    axarr[0].plot(variances, mses)
-    axarr[1].plot(variances, mses2)
-    axarr[1].set_xlabel('Variance threshold for PCA components')
-    plt.show()
-
-get_sensitivity_specificity()
+        f, axarr = plt.subplots(2, 1)
+        axarr[0].set_title('For all dataset')
+        axarr[1].set_title('For sections with artifacts')
+        axarr[0].plot(variances, mses)
+        axarr[1].plot(variances, mses2)
+        axarr[1].set_xlabel('Variance threshold for PCA components')
+        plt.show()

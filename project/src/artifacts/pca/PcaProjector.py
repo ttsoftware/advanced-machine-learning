@@ -1,7 +1,6 @@
 import numpy as np
 
-from src.Data.DataSet import DataSet
-
+from src.data.DataSet import DataSet
 
 def project(dataset, threshold=None):
     """
