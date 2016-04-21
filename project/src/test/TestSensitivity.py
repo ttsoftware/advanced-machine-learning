@@ -35,11 +35,9 @@ class TestDataSet(unittest.TestCase):
         nb_added_no_removed = 0
         nb_added_removed = 0
 
-        sum_mse = 0
-        sum_mse_no_artifacts = 0
-        sum_mse_artifacts = 0
-        nb_with_artifacts = 0
-        nb_without_artifacts = 0
+        mse_all_dataset = []
+        mse_with_artifacts = []
+        mse_without_artifacts = []
 
         threshold = 0
         for idx in range(len(dataset) // 40):
@@ -57,9 +55,8 @@ class TestDataSet(unittest.TestCase):
                     artificer = Artificer(current_dataset, add_artifacts=False)
                     rejected = artificer.pca_reconstruction(threshold)[1]
                     mse = artificer.mse()
-                    sum_mse += mse[0]
-                    sum_mse_no_artifacts += mse[2]
-                    nb_without_artifacts += mse[4]
+                    mse_all_dataset.append(mse[0])
+                    mse_without_artifacts.append(mse[1])
 
                     if rejected:
                         nb_no_added_removed += 1
@@ -71,11 +68,10 @@ class TestDataSet(unittest.TestCase):
                     artificer = Artificer(current_dataset, add_artifacts=True)
                     rejected = artificer.pca_reconstruction(threshold)[1]
                     mse = artificer.mse()
-                    sum_mse += mse[0]
-                    sum_mse_artifacts += mse[1]
-                    sum_mse_no_artifacts += mse[2]
-                    nb_with_artifacts += mse[3]
-                    nb_without_artifacts += mse[4]
+                    mse_all_dataset.append(mse[0])
+                    mse_with_artifacts.append(mse[2])
+                    mse_without_artifacts.append(mse[1])
+
                     if rejected:
                         nb_added_removed += 1
                     else:
@@ -94,15 +90,7 @@ class TestDataSet(unittest.TestCase):
         print 'Sensitivity: ', (nb_added_removed) / (nb_added_removed + nb_added_no_removed)
         print 'Specificity: ', (nb_added_no_removed) / (nb_no_added_no_removed + nb_no_added_removed)
 
-        print 'Mean squared error on dataset: ', sum_mse / (
-            len(dataset.unpack_params() * len(dataset.unpack_params()[0])) - 10 * 40 * 14)
-        print 'Mean squared error on segments with artifacts: ', sum_mse_artifacts / nb_with_artifacts
-        print 'Mean squared error on segments with no artifacts: ', sum_mse_no_artifacts / nb_without_artifacts
-        print sum_mse_artifacts
-        print nb_with_artifacts
-        print sum_mse_no_artifacts
-        print nb_without_artifacts
-        print len(artificer.original_dataset.unpack_params()[0])
+        print np.mean(mse_all_dataset)
 
     def test_plot_mse(self):
         filename = '../../data/subject1_csv/eeg_200605191428_epochs/small.csv'

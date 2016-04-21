@@ -1,12 +1,14 @@
 import numpy as np
 
+from decimal import Decimal
+
 
 class DataPoint(object):
 
     def __init__(self, params, target=None):
 
         if type(params) != list:  # assume it is ndarray vector [[]]
-            params = map(lambda x: x[0], params.tolist())
+            params = map(lambda x: float(x[0]), params.tolist())
 
         if target is not None:
             self.target = float(target)
