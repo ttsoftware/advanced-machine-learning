@@ -120,7 +120,12 @@ class Artificer:
                     sum_without_artifacts += np.power(new_data[i][j] - old_data[i][j], 2)
                     nb_datapoints_without_artifacts += 1
 
-        return sum_all_dataset, sum_with_artifacts, sum_without_artifacts, nb_datapoints_with_artifacts, nb_datapoints_without_artifacts
+        if nb_datapoints_with_artifacts == 0:
+            mse_with_artifacts = 0
+        else:
+            mse_with_artifacts = sum_with_artifacts/nb_datapoints_with_artifacts
+
+        return sum_all_dataset/(len(new_data) * len(new_data)), sum_without_artifacts/nb_datapoints_without_artifacts, 0
 
     def knn_threshold(self):
 
