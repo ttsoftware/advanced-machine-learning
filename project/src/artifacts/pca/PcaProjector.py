@@ -2,6 +2,7 @@ import numpy as np
 
 from src.data.DataSet import DataSet
 
+
 def project(dataset, threshold=None):
     """
     Returns a dataset that is reconstructed based on its principal components

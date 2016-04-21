@@ -94,8 +94,7 @@ class TestDataSet(unittest.TestCase):
         print 'Sensitivity: ', (nb_added_removed) / (nb_added_removed + nb_added_no_removed)
         print 'Specificity: ', (nb_added_no_removed) / (nb_no_added_no_removed + nb_no_added_removed)
 
-        print 'Mean squared error on dataset: ', sum_mse / (
-            len(dataset.unpack_params() * len(dataset.unpack_params()[0])) - 10 * 40 * 14)
+        print 'Mean squared error on dataset: ', sum_mse / (len(dataset.unpack_params() * len(dataset.unpack_params()[0])) - 10 * 40 * 14)
         print 'Mean squared error on segments with artifacts: ', sum_mse_artifacts / nb_with_artifacts
         print 'Mean squared error on segments with no artifacts: ', sum_mse_no_artifacts / nb_without_artifacts
         print sum_mse_artifacts

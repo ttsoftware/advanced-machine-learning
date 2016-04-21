@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.neighbors import NearestNeighbors
+
 import src.artifacts.pca.PcaProjector as PCA
 
 from src.data.DataSet import DataSet
@@ -8,6 +11,9 @@ from src.data.Normalizer import Normalizer
 
 class Artificer:
     def __init__(self, dataset, add_artifacts=False):
+        self.spike_range_end = 35
+        self.spike_range_start = 5
+
         self.original_dataset = dataset
         if add_artifacts:
             self.has_artifacts = True
@@ -32,8 +38,7 @@ class Artificer:
 
         mean = np.mean(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
         var = np.var(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
-        self.spike_range_start = 5
-        self.spike_range_end = 35
+
         self.sine_artifact(self.spike_range_start, self.spike_range_end, data, mean, var)
 
         noise_dataset = DataSet(data.tolist())
@@ -112,3 +117,35 @@ class Artificer:
                     nb_datapoints_without_artifacts += 1
 
         return sum_all_dataset, sum_with_artifacts, sum_without_artifacts, nb_datapoints_with_artifacts, nb_datapoints_without_artifacts
+
+    def knn_threshold(self):
+
+        data = np.array(self.noise_dataset.unpack_params()).T
+        covariance = np.cov(data)
+        eigenvalues, eigenvectors = np.linalg.eigh(covariance)
+
+        print eigenvectors
+
+        knn = NearestNeighbors(n_neighbors=3, algorithm='kd_tree')
+        model = knn.fit(eigenvectors)
+
+        distance_graph = model.kneighbors_graph(mode='distance').toarray()
+        # remove the sparse values
+        # we now have i -> [distance to K nearest neighbors]
+        distance_matrix = np.array(map(lambda x: filter(lambda y: y != 0, x), distance_graph))
+
+        print distance_matrix
+        mean_distance = np.mean(distance_matrix)
+        # mean_distance = np.mean(distance_matrix, axis=tuple(range(1, data.ndim)))
+        print mean_distance
+
+        # find all points, whose nearest-neighbor-distance-mean is more than the mean distance away
+        print np.array(filter(lambda x: np.mean(x) > mean_distance, distance_matrix))
+
+        # plt.scatter(X, c='k', label='data')
+        # plt.plot(y_, c='g', label='prediction')
+        # plt.axis('tight')
+        # plt.legend()
+        # plt.show()
+
+        return 0

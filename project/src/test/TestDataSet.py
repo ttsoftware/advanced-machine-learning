@@ -15,15 +15,14 @@ class TestDataSet(unittest.TestCase):
 
         threshold = 0
         for idx in range(len(dataset) // 40):
-            current_dataset = DataSet(dataset[idx*40:(idx+1)*40])
+            current_dataset = DataSet(dataset[idx * 40:(idx + 1) * 40])
 
             if idx < 10:
                 artificer = Artificer(current_dataset, add_artifacts=False)
-                max_eigenvalue = artificer.pca_reconstruction()
+                max_eigenvalue, rejected = artificer.pca_reconstruction()
                 threshold = max(threshold, max_eigenvalue)
             else:
                 artificer = Artificer(current_dataset, add_artifacts=True)
                 artificer.pca_reconstruction(threshold)
                 artificer.visualize()
                 break
-
