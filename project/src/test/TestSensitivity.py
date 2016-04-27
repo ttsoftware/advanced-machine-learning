@@ -22,7 +22,77 @@ class TestDataSet(unittest.TestCase):
                 sum += np.power(new_data[i][j] - old_data[i][j], 2)
         return sum / (len(new_data) * len(new_data[i]))
 
-    def test_sensitivity_specificity(self):
+    def test_max_sensitivity_specificity(self):
+        # filename = '../../data/subject1_csv/eeg_200605191428_epochs/small.csv'
+        filename = '../../data/emotiv/EEG_Data_filtered.csv'
+
+        dataset = DataReader.read_data(filename, ',')
+        nb_windows = 0
+        nb_no_added = 0
+        nb_added = 0
+        nb_no_added_no_removed = 0
+        nb_no_added_removed = 0
+        nb_added_no_removed = 0
+        nb_added_removed = 0
+
+        mse_all_dataset = []
+        mse_with_artifacts = []
+        mse_without_artifacts = []
+
+        threshold = 0
+        for idx in range(len(dataset) // 40):
+            current_dataset = DataSet(dataset[idx * 40:(idx + 1) * 40])
+
+            if idx < 10:
+                artificer = Artificer(current_dataset, add_artifacts=False)
+                max_eigenvalue = artificer.pca_reconstruction()[1]
+                threshold = max(threshold, max_eigenvalue)
+            else:
+                nb_windows += 1
+                decision = random.randrange(0, 2)
+                if decision == 0:
+                    nb_no_added += 1
+                    artificer = Artificer(current_dataset, add_artifacts=False)
+                    rejected = artificer.pca_reconstruction(threshold)[2]
+                    mse = artificer.mse()
+                    mse_all_dataset.append(mse[0])
+                    mse_without_artifacts.append(mse[1])
+
+                    if rejected:
+                        nb_no_added_removed += 1
+                    else:
+                        nb_no_added_no_removed += 1
+                        # artificer.visualize()
+                else:
+                    nb_added += 1
+                    artificer = Artificer(current_dataset, add_artifacts=True)
+                    rejected = artificer.pca_reconstruction(threshold)[2]
+                    mse = artificer.mse()
+                    mse_all_dataset.append(mse[0])
+                    mse_with_artifacts.append(mse[2])
+                    mse_without_artifacts.append(mse[1])
+
+                    if rejected:
+                        nb_added_removed += 1
+                    else:
+                        nb_added_no_removed += 1
+
+        artificer.visualize("max")
+
+        print 'Number of windows without artifacts: ', nb_no_added
+        print 'Number of windows with artifacts: ', nb_added
+
+        print 'True positive: ', nb_added_removed
+        print 'True negative: ', nb_no_added_no_removed
+        print 'False positive: ', nb_no_added_removed
+        print 'False negative: ', nb_added_no_removed
+
+        print 'Sensitivity: ', (nb_added_removed) / (nb_added_removed + nb_added_no_removed)
+        print 'Specificity: ', (nb_added_no_removed) / (nb_no_added_no_removed + nb_no_added_removed)
+
+        print np.mean(mse_all_dataset)
+
+    def test_avg_sensitivity_specificity(self):
         # filename = '../../data/subject1_csv/eeg_200605191428_epochs/small.csv'
         filename = '../../data/emotiv/EEG_Data_filtered.csv'
 
@@ -53,7 +123,7 @@ class TestDataSet(unittest.TestCase):
                 if decision == 0:
                     nb_no_added += 1
                     artificer = Artificer(current_dataset, add_artifacts=False)
-                    rejected = artificer.pca_reconstruction(threshold)[1]
+                    rejected = artificer.pca_reconstruction(threshold)[2]
                     mse = artificer.mse()
                     mse_all_dataset.append(mse[0])
                     mse_without_artifacts.append(mse[1])
@@ -66,7 +136,7 @@ class TestDataSet(unittest.TestCase):
                 else:
                     nb_added += 1
                     artificer = Artificer(current_dataset, add_artifacts=True)
-                    rejected = artificer.pca_reconstruction(threshold)[1]
+                    rejected = artificer.pca_reconstruction(threshold)[2]
                     mse = artificer.mse()
                     mse_all_dataset.append(mse[0])
                     mse_with_artifacts.append(mse[2])
@@ -77,7 +147,7 @@ class TestDataSet(unittest.TestCase):
                     else:
                         nb_added_no_removed += 1
 
-        artificer.visualize()
+        artificer.visualize("avg")
 
         print 'Number of windows without artifacts: ', nb_no_added
         print 'Number of windows with artifacts: ', nb_added

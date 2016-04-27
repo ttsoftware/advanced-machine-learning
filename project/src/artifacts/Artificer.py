@@ -69,16 +69,17 @@ class Artificer:
         :param threshold: The threshold where the PCA projector will reject principal components
         :return:
         """
-        reconstructed_dataset, max_eigenvalue, rejected = PCA.project(self.normalized_noise_dataset, threshold)
+        reconstructed_dataset, avg_eigenvalue, max_eigenvalue, rejected = PCA.project(self.normalized_noise_dataset, threshold)
         self.reconstructed_dataset = self.normalizer.add_means(reconstructed_dataset)
 
-        return max_eigenvalue, rejected
+        return avg_eigenvalue, max_eigenvalue, rejected
 
-    def visualize(self, components=14):
+    def visualize(self, name='figure_artifacts', components=14):
         """
         Visualizes the original dataset alongside the dataset with added artifacts
         and the reconstructed dataset.
 
+        :param name: the name of the image.
         :param components: How many components should be realized, starting from component 0
         :return: None
         """
@@ -91,7 +92,7 @@ class Artificer:
             axarr[index].plot(np.array(self.noise_dataset.unpack_params()).T[i], color='r')
             axarr[index].plot(np.array(self.reconstructed_dataset.unpack_params()).T[i], color='b')
 
-        plt.savefig("figure_artifact", papertype='a0', pad_inches=0, bbox_inches=0, frameon=False)
+        plt.savefig(name, papertype='a0', pad_inches=0, bbox_inches=0, frameon=False)
 
     def mse(self):
         new_data = np.array(self.original_dataset.unpack_params())
