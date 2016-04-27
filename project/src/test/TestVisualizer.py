@@ -10,6 +10,8 @@ class TestDataSet(unittest.TestCase):
         dataset = DataReader.read_data(filename, ',')
 
         visualizer = Visualizer(dataset)
-        visualizer.visualize_mse(10, "max", 40)
-        visualizer.visualize_mse(10, "avg", 40)
-        visualizer.visualize_mse(10, "avg_max", 40)
+        # visualizer.visualize_mse(10, "max", 40)
+        # visualizer.visualize_mse(10, "avg", 40)
+        # visualizer.visualize_mse(10, "avg_max", 40)
+
+        visualizer.visualize_cross_validation(10, [20, 30, 40, 50, 60])

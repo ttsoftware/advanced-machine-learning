@@ -17,47 +17,116 @@ class Visualizer:
         :param add_artifacts:
         :param threshold_type:
         :param calibration_length: The number of windows used for calibration
-        :param threshold:
         :param window_size:
         :param name:
         :return:
         """
 
-        nb_windows = len(self.dataset) // window_size
+        dataset = self.dataset.clone()
+
         mse_windows = []
 
         threshold = 0
         for idx in range(calibration_length):
-            current_window = DataSet(self.dataset[idx * window_size:(idx + 1) * window_size])
+            current_window = DataSet(dataset[idx * window_size:(idx + 1) * window_size])
 
-            if idx < calibration_length:
-                artificer = Artificer(current_window, add_artifacts=False)
-                avg_eigenvalue, max_eigenvalue, rejected = artificer.pca_reconstruction()
+            artificer = Artificer(current_window, add_artifacts=False)
+            avg_eigenvalue, max_eigenvalue, rejected = artificer.pca_reconstruction()
 
-                if threshold_type == 'max':
-                    threshold = max(threshold, max_eigenvalue)
-                elif threshold_type == 'avg':
-                    threshold = max(threshold, avg_eigenvalue)
-                elif threshold_type == 'avg_max':
-                    threshold += max_eigenvalue
+            if threshold_type == 'max':
+                threshold = max(threshold, max_eigenvalue)
+            elif threshold_type == 'avg':
+                threshold = max(threshold, avg_eigenvalue)
+            elif threshold_type == 'avg_max':
+                threshold += max_eigenvalue
 
         if threshold_type == 'avg_max':
             threshold = np.mean(threshold)
 
-        for idx in range(calibration_length, nb_windows):
-            current_window = DataSet(self.dataset[idx * window_size:(idx + 1) * window_size])
+        for idx in range(calibration_length, len(dataset) // window_size):
+            current_window = DataSet(dataset[idx * window_size:(idx + 1) * window_size])
 
             artificer = Artificer(current_window, add_artifacts)
             artificer.pca_reconstruction(threshold)
             mse = artificer.mse()
             mse_windows.append(mse)
 
-        print mse_windows
-
-        plt.plot(mse_windows)
-        plt.xlabel('window #')
-        plt.ylabel('Mean Squared Error')
+        f = plt.figure()
+        ax = f.add_subplot(111)
+        ax.plot(mse_windows)
+        ax.set_xlabel('window #')
+        ax.set_ylabel('Mean Squared Error')
         plt.savefig(name + '_' + threshold_type)
+
+    def visualize_cross_validation(self, calibration_length, window_sizes, add_artifacts=True, color='r', name='figure_cross_validation'):
+        """
+
+        :param color:
+        :param width:
+        :param calibration_length:
+        :param window_sizes:
+        :param add_artifacts:
+        :param name:
+        :return:
+        """
+
+        dataset = self.dataset.clone()
+
+        # Calibration
+        threshold_max = 0
+        threshold_avg = 0
+        threshold_avg_max = 0
+        for idx in range(calibration_length):
+            current_window = DataSet(dataset[idx * 40:(idx + 1) * 40])
+
+            artificer = Artificer(current_window, add_artifacts=False)
+            avg_eigenvalue, max_eigenvalue, rejected = artificer.pca_reconstruction()
+
+            threshold_max = max(threshold_max, max_eigenvalue)
+            threshold_avg = max(threshold_avg, avg_eigenvalue)
+            threshold_avg_max += max_eigenvalue
+
+        threshold_avg_max = np.mean(threshold_avg_max)
+
+        thresholds = [threshold_max, threshold_avg, threshold_avg_max]
+
+        # Make dataset with artifacts
+        new_dataset = DataSet()
+        for idx in range(calibration_length, len(dataset) // 40):
+            current_window = DataSet(dataset[idx * 40:(idx + 1) * 40])
+
+            artificer = Artificer(current_window, add_artifacts)
+            new_dataset += artificer.get_noise_dataset()
+
+        # Do cross validation
+        mse = [0] * (len(window_sizes) * 3)
+        parameter_combo = 0
+
+        for threshold in thresholds:
+            for window_size in window_sizes:
+                current_mse = 0
+                windows = range(calibration_length, len(dataset) // window_size)
+                for window_idx in windows:
+                    current_window = DataSet(dataset[window_idx * window_size:(window_idx + 1) * window_size])
+
+                    artificer = Artificer(current_window, add_artifacts=False)
+                    artificer.pca_reconstruction(threshold)
+                    current_mse += artificer.mse()
+                mse[parameter_combo] = current_mse / len(windows)
+                parameter_combo += 1
+
+        f = plt.figure()
+        ax = f.add_subplot(111)
+        rects = ax.bar(np.arange(len(mse)), mse, color=color)
+
+        ax.set_ylabel('Mean squared error')
+        ax.set_title('mse cross validation')
+        ax.set_xticks(np.arange(len(mse)))
+        labels = ['max_' + str(window_size) for window_size in window_sizes] + ['avg_' + str(window_size) for window_size in window_sizes] + ['avg-max_' + str(window_size) for window_size in window_sizes]
+        ax.set_xticklabels(labels)
+        plt.xticks(rotation=70)
+
+        plt.savefig(name)
 
     def visualize_data(self, name='figure_artifacts_data', components=14):
         """
