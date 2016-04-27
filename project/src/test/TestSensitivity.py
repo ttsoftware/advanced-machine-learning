@@ -105,7 +105,7 @@ class TestDataSet(unittest.TestCase):
         nb_added_no_removed = 0
         nb_added_removed = 0
 
-        mse_all_dataset = []
+        mse_windows = []
         mse_with_artifacts = []
         mse_without_artifacts = []
 
@@ -125,8 +125,7 @@ class TestDataSet(unittest.TestCase):
                     artificer = Artificer(current_dataset, add_artifacts=False)
                     rejected = artificer.pca_reconstruction(threshold)[2]
                     mse = artificer.mse()
-                    mse_all_dataset.append(mse[0])
-                    mse_without_artifacts.append(mse[1])
+                    mse_windows.append(mse)
 
                     if rejected:
                         nb_no_added_removed += 1
@@ -138,16 +137,12 @@ class TestDataSet(unittest.TestCase):
                     artificer = Artificer(current_dataset, add_artifacts=True)
                     rejected = artificer.pca_reconstruction(threshold)[2]
                     mse = artificer.mse()
-                    mse_all_dataset.append(mse[0])
-                    mse_with_artifacts.append(mse[2])
-                    mse_without_artifacts.append(mse[1])
+                    mse_windows.append(mse)
 
                     if rejected:
                         nb_added_removed += 1
                     else:
                         nb_added_no_removed += 1
-
-        artificer.visualize("avg")
 
         print 'Number of windows without artifacts: ', nb_no_added
         print 'Number of windows with artifacts: ', nb_added
@@ -160,7 +155,8 @@ class TestDataSet(unittest.TestCase):
         print 'Sensitivity: ', (nb_added_removed) / (nb_added_removed + nb_added_no_removed)
         print 'Specificity: ', (nb_added_no_removed) / (nb_no_added_no_removed + nb_no_added_removed)
 
-        print np.mean(mse_all_dataset)
+        print 'MSE: '
+        print mse_windows
 
     def test_plot_mse(self):
         filename = '../../data/subject1_csv/eeg_200605191428_epochs/small.csv'
