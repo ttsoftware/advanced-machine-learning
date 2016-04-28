@@ -3,7 +3,6 @@ import numpy as np
 from src.artifacts.Artificer import Artificer
 from src.data.DataSet import DataSet
 
-
 class ExperimentorService:
 
     @staticmethod
@@ -69,19 +68,14 @@ class ExperimentorService:
     def mse(original, reconstructed, window_size):
         original_dataset = original.unpack_params()
         reconstructed_dataset = reconstructed.unpack_params()
-        mse = []
-        for idx in range(len(original_dataset) // window_size):
-            current_original = (original_dataset[idx * window_size:(idx + 1) * window_size])
-            current_reconstructed = (reconstructed_dataset[idx * window_size:(idx + 1) * reconstructed_dataset])
-            sum_window = 0
 
-            for i in range(len(current_original)):
-                for j in range(len(current_original[i])):
-                    sum_window += np.power(current_original[i][j] - current_reconstructed[i][j], 2)
+        sum_window = 0
 
-            mse.append(sum_window / (len(current_original) * len(current_original[0])))
+        for i in range(len(original_dataset)):
+            for j in range(len(original_dataset[i])):
+                sum_window += np.power(original_dataset[i][j] - reconstructed_dataset[i][j], 2)
 
-        return mse
+        return sum_window / (len(original_dataset) * len(original_dataset[0]))
 
     @staticmethod
     def sensitivity_specificity(original, reconstructed, noisy, window_size, rejected):
