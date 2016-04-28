@@ -109,14 +109,15 @@ class ExperimentorService:
         nb_added_no_removed = 0
         nb_added_removed = 0
 
-        original_dataset = original.unpack_params()
-        reconstructed_dataset = reconstructed.unpack_params()
-        noisy_dataset = noisy.unpack_params()
+        original_windows = ExperimentorService.windows(original.clone(), window_size)
+        reconstructed_windows = ExperimentorService.windows(reconstructed.clone(), window_size)
+        noisy_windows = ExperimentorService.windows(noisy.clone(), window_size)
 
-        for idx in range(len(original_dataset) // window_size):
-            current_original = (original_dataset[idx * window_size:(idx + 1) * window_size])
-            current_reconstructed = (reconstructed_dataset[idx * window_size:(idx + 1) * reconstructed_dataset])
-            current_noisy = (noisy_dataset[idx * window_size:(idx + 1) * reconstructed_dataset])
+        for idx, original_window in enumerate(original_windows):
+            reconstructed_window = reconstructed_windows[idx]
+            noisy_window = noisy_windows[idx]
+
+            # TODO: FIIIIIIIX
 
             if current_original == current_noisy:
                 nb_no_added += 1
