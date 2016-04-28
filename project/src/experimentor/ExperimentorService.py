@@ -68,7 +68,7 @@ class ExperimentorService:
         return [DataSet(dataset[idx * window_size:(idx + 1) * window_size]) for idx in range(len(dataset) // window_size)]
 
     @staticmethod
-    def mse(original, reconstructed, window_size):
+    def mse(original, reconstructed):
         original_dataset = original.unpack_params()
         reconstructed_dataset = reconstructed.unpack_params()
 
