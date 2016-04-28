@@ -9,10 +9,12 @@ from src.experimentor.ExperimentorService import ExperimentorService
 
 
 class Visualizer:
-    def __init__(self, dataset):
-        self.dataset = dataset
 
-    def visualize_mse(self, threshold_type, window_size, name='figure_mse'):
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def visualize_mse(original_dataset, reconstructed_dataset, window_size, name='figure_mse'):
         """
 
         :param add_artifacts:
@@ -23,33 +25,12 @@ class Visualizer:
         :return:
         """
 
-        dataset = self.dataset.clone()
-
+        original_windows = ExperimentorService.windows(original_dataset.clone())
+        reconstructed_windows = ExperimentorService.windows(reconstructed_dataset.clone())
         mse_windows = []
 
-        threshold = 0
-        for idx in range(calibration_length):
-            current_window = DataSet(dataset[idx * window_size:(idx + 1) * window_size])
-
-            artificer = Artificer(current_window, add_artifacts=False)
-            avg_eigenvalue, max_eigenvalue, rejected = artificer.pca_reconstruction()
-
-            if threshold_type == 'max':
-                threshold = max(threshold, max_eigenvalue)
-            elif threshold_type == 'avg':
-                threshold = max(threshold, avg_eigenvalue)
-            elif threshold_type == 'avg_max':
-                threshold += max_eigenvalue
-
-        if threshold_type == 'avg_max':
-            threshold = np.mean(threshold)
-
-        for idx in range(calibration_length, len(dataset) // window_size):
-            current_window = DataSet(dataset[idx * window_size:(idx + 1) * window_size])
-
-            artificer = Artificer(current_window, add_artifacts)
-            artificer.pca_reconstruction(threshold)
-            mse = artificer.mse()
+        for idx, original_window in enumerate(original_windows):
+            mse = ExperimentorService.mse(original_window, reconstructed_windows[idx])
             mse_windows.append(mse)
 
         f = plt.figure()
@@ -57,7 +38,7 @@ class Visualizer:
         ax.plot(mse_windows)
         ax.set_xlabel('window #')
         ax.set_ylabel('Mean Squared Error')
-        plt.savefig(name + '_' + threshold_type)
+        plt.savefig(name)
 
     def visualize_cross_validation(self, calibration_length, window_sizes, random=True, color='r', name='figure_cross_validation'):
         """

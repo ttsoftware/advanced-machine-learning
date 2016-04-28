@@ -6,6 +6,9 @@ from src.data.DataSet import DataSet
 
 class ExperimentorService:
 
+    def __init__(self):
+        pass
+
     @staticmethod
     def calibrate(dataset, window_size=40):
         dataset = dataset.clone()
