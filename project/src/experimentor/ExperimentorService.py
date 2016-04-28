@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 
 from src.artifacts.Artificer import Artificer
@@ -7,6 +9,15 @@ class ExperimentorService:
 
     def __init__(self):
         pass
+
+    @staticmethod
+    def split_dataset(dataset, ratio=0.8):
+        training_set_size = np.math.floor(len(DataSet) * ratio)
+
+        training_set = DataSet(dataset[:training_set_size])
+        test_set = DataSet(dataset[training_set_size:])
+
+        return training_set, test_set
 
     @staticmethod
     def calibrate(dataset, window_size=40):
@@ -29,14 +40,14 @@ class ExperimentorService:
         return threshold_max, threshold_avg, threshold_avg_max
 
     @staticmethod
-    def artifactify(dataset, window_size, random=True):
+    def artifactify(dataset, window_size, randomly_add_artifacts=True):
         dataset = dataset.clone()
 
         artifact_dataset = DataSet()
         spike_size = (window_size // 4) * 3
 
         for window in ExperimentorService.windows(dataset, window_size):
-            if random:
+            if randomly_add_artifacts:
                 decision = random.randrange(0, 2)
                 if decision:
                     artificer = Artificer(window, spike_size=spike_size, add_artifacts=True)

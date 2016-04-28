@@ -17,16 +17,15 @@ class Visualizer:
     def visualize_mse(original_dataset, reconstructed_dataset, window_size, name='figure_mse'):
         """
 
-        :param add_artifacts:
-        :param threshold_type:
-        :param calibration_length: The number of windows used for calibration
         :param window_size:
+        :param original_dataset:
+        :param reconstructed_dataset:
         :param name:
         :return:
         """
 
-        original_windows = ExperimentorService.windows(original_dataset.clone())
-        reconstructed_windows = ExperimentorService.windows(reconstructed_dataset.clone())
+        original_windows = ExperimentorService.windows(original_dataset.clone(), window_size)
+        reconstructed_windows = ExperimentorService.windows(reconstructed_dataset.clone(), window_size)
         mse_windows = []
 
         for idx, original_window in enumerate(original_windows):
@@ -40,14 +39,14 @@ class Visualizer:
         ax.set_ylabel('Mean Squared Error')
         plt.savefig(name)
 
-    def visualize_cross_validation(self, calibration_length, window_sizes, random=True, color='r', name='figure_cross_validation'):
+    @staticmethod
+    def visualize_cross_validation(original_dataset, reconstructed_dataset, thresholds, window_sizes, name='figure_cross_validation'):
         """
 
-        :param color:
-        :param width:
-        :param calibration_length:
+        :param thresholds:
+        :param reconstructed_dataset:
+        :param original_dataset:
         :param window_sizes:
-        :param add_artifacts:
         :param name:
         :return:
         """
@@ -56,7 +55,7 @@ class Visualizer:
         threshold_max, threshold_avg, threshold_avg_max = experimentor.calibrate(calibration_length)
         thresholds = [threshold_max, threshold_avg, threshold_avg_max]
 
-        artificers = experimentor.artifactify(random)
+        artificers = experimentor.artifactify(randomly_add_artifacts)
 
         # Do cross validation
         mse = [0] * (len(window_sizes) * 3)
