@@ -5,7 +5,7 @@ import numpy as np
 
 from src.artifacts.Artificer import Artificer
 from src.data.DataSet import DataSet
-from src.experimentor.Experimentor import Experimentor
+from src.experimentor.ExperimentorService import ExperimentorService
 
 
 class Visualizer:
@@ -59,7 +59,7 @@ class Visualizer:
         ax.set_ylabel('Mean Squared Error')
         plt.savefig(name + '_' + threshold_type)
 
-    def visualize_cross_validation(self, calibration_length, window_sizes, add_artifacts=True, color='r', name='figure_cross_validation'):
+    def visualize_cross_validation(self, calibration_length, window_sizes, random=True, color='r', name='figure_cross_validation'):
         """
 
         :param color:
@@ -71,12 +71,11 @@ class Visualizer:
         :return:
         """
 
-        experimentor = Experimentor(self.dataset.clone())
-        threshold_max, threshold_avg, threshold_avg_max = experimentor.calibrate(10)
+        experimentor = ExperimentorService(self.dataset.clone())
+        threshold_max, threshold_avg, threshold_avg_max = experimentor.calibrate(calibration_length)
+        thresholds = [threshold_max, threshold_avg, threshold_avg_max]
 
-
-
-        artificers = experimentor.artifactify(True)
+        artificers = experimentor.artifactify(random)
 
         # Do cross validation
         mse = [0] * (len(window_sizes) * 3)
@@ -85,7 +84,7 @@ class Visualizer:
         for threshold in thresholds:
             for window_size in window_sizes:
                 current_mse = 0
-                windows = range(calibration_length, len(dataset) // window_size)
+                windows = range(calibration_length, len(artificer))
                 for window_idx in windows:
                     current_window = DataSet(dataset[window_idx * window_size:(window_idx + 1) * window_size])
 

@@ -8,12 +8,14 @@ from src.data.Normalizer import Normalizer
 
 
 class Artificer:
-    def __init__(self, dataset_window, add_artifacts=False):
+    def __init__(self, dataset_window, spike_size=30, add_artifacts=False):
         # self.factors = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 3, 4, 40, 100, 300, 800, 400, 50, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # np.linspace(1, 80, len(data[0]))
         self.factors = [0, 0, 0, 0, 1, 1, 1, 1, 3, 4, 40, 100, 300, 800]
 
-        self.spike_range_end = 35
-        self.spike_range_start = 5
+        spike_offset = (len(dataset_window) - spike_size) // 2
+
+        self.spike_range_start = spike_offset
+        self.spike_range_end = spike_size + spike_offset
 
         self.original_window = dataset_window
         if add_artifacts:
@@ -93,3 +95,9 @@ class Artificer:
 
         # MSE for this window
         return np.mean(sum_window)
+
+    def get_noised_window(self):
+        return self.noised_window.clone()
+
+    def get_reconstructed_window(self):
+        return self.reconstructed_window.clone()
