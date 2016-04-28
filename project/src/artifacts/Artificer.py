@@ -93,6 +93,3 @@ class Artificer:
 
         # MSE for this window
         return np.mean(sum_window)
-
-    def get_noise_dataset(self):
-        return self.noised_window

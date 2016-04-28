@@ -5,6 +5,7 @@ import numpy as np
 
 from src.artifacts.Artificer import Artificer
 from src.data.DataSet import DataSet
+from src.experimentor.Experimentor import Experimentor
 
 
 class Visualizer:
@@ -70,33 +71,12 @@ class Visualizer:
         :return:
         """
 
-        dataset = self.dataset.clone()
+        experimentor = Experimentor(self.dataset.clone())
+        threshold_max, threshold_avg, threshold_avg_max = experimentor.calibrate(10)
 
-        # Calibration
-        threshold_max = 0
-        threshold_avg = 0
-        threshold_avg_max = 0
-        for idx in range(calibration_length):
-            current_window = DataSet(dataset[idx * 40:(idx + 1) * 40])
 
-            artificer = Artificer(current_window, add_artifacts=False)
-            avg_eigenvalue, max_eigenvalue, rejected = artificer.pca_reconstruction()
 
-            threshold_max = max(threshold_max, max_eigenvalue)
-            threshold_avg = max(threshold_avg, avg_eigenvalue)
-            threshold_avg_max += max_eigenvalue
-
-        threshold_avg_max = np.mean(threshold_avg_max)
-
-        thresholds = [threshold_max, threshold_avg, threshold_avg_max]
-
-        # Make dataset with artifacts
-        new_dataset = DataSet()
-        for idx in range(calibration_length, len(dataset) // 40):
-            current_window = DataSet(dataset[idx * 40:(idx + 1) * 40])
-
-            artificer = Artificer(current_window, add_artifacts)
-            new_dataset += artificer.get_noise_dataset()
+        artificers = experimentor.artifactify(True)
 
         # Do cross validation
         mse = [0] * (len(window_sizes) * 3)
