@@ -12,7 +12,7 @@ class ExperimentorService:
 
     @staticmethod
     def split_dataset(dataset, ratio=0.8):
-        training_set_size = np.math.floor(len(DataSet) * ratio)
+        training_set_size = int(np.math.floor(len(dataset) * ratio))
 
         training_set = DataSet(dataset[:training_set_size])
         test_set = DataSet(dataset[training_set_size:])
@@ -56,6 +56,11 @@ class ExperimentorService:
             else:
                 artificer = Artificer(window, spike_size=spike_size, add_artifacts=True)
             artifact_dataset += artificer.get_noised_window()
+
+        if len(dataset) > len(artifact_dataset):
+            amount_missing = len(dataset) - len(artifact_dataset)
+
+            return DataSet(artifact_dataset + dataset[-amount_missing:])
 
         return artifact_dataset
 

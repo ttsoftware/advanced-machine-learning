@@ -40,43 +40,36 @@ class Visualizer:
         plt.savefig(name)
 
     @staticmethod
-    def visualize_cross_validation(original_dataset, reconstructed_dataset, thresholds, window_sizes, name='figure_cross_validation'):
+    def visualize_cross_validation(original_dataset, artifact_dataset, thresholds, window_sizes, name='figure_cross_validation'):
         """
 
+        :param artifact_dataset:
         :param thresholds:
-        :param reconstructed_dataset:
         :param original_dataset:
         :param window_sizes:
         :param name:
         :return:
         """
 
-        experimentor = ExperimentorService(self.dataset.clone())
-        threshold_max, threshold_avg, threshold_avg_max = experimentor.calibrate(calibration_length)
-        thresholds = [threshold_max, threshold_avg, threshold_avg_max]
-
-        artificers = experimentor.artifactify(randomly_add_artifacts)
-
         # Do cross validation
-        mse = [0] * (len(window_sizes) * 3)
-        parameter_combo = 0
+        mse = []
 
         for threshold in thresholds:
             for window_size in window_sizes:
-                current_mse = 0
-                windows = range(calibration_length, len(artificer))
-                for window_idx in windows:
-                    current_window = DataSet(dataset[window_idx * window_size:(window_idx + 1) * window_size])
+                original_windows = ExperimentorService.windows(original_dataset.clone(), window_size)
+                artifact_windows = ExperimentorService.windows(artifact_dataset.clone(), window_size)
 
-                    artificer = Artificer(current_window, add_artifacts=False)
-                    artificer.pca_reconstruction(threshold)
-                    current_mse += artificer.mse()
-                mse[parameter_combo] = current_mse / len(windows)
-                parameter_combo += 1
+                current_mse = []
+                for idx, original_window in enumerate(original_windows):
+                    reconstructed_window, rejected = ExperimentorService.pca_reconstruction(artifact_windows[idx], window_size, threshold)
+
+                    current_mse += [ExperimentorService.mse(original_window, reconstructed_window)]
+
+                mse += [np.mean(current_mse)]
 
         f = plt.figure()
         ax = f.add_subplot(111)
-        rects = ax.bar(np.arange(len(mse)), mse, color=color)
+        rects = ax.bar(np.arange(len(mse)), mse, color='b')
 
         ax.set_ylabel('Mean squared error')
         ax.set_title('mse cross validation')
