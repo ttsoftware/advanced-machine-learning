@@ -64,3 +64,62 @@ class ExperimentorService:
     @staticmethod
     def windows(dataset, window_size):
         return [DataSet(dataset[idx * window_size:(idx + 1) * window_size]) for idx in range(len(dataset) // window_size)]
+
+    @staticmethod
+    def mse(original, reconstructed, window_size):
+        original_dataset = original.unpack_params()
+        reconstructed_dataset = reconstructed.unpack_params()
+        mse = []
+        for idx in range(len(original_dataset) // window_size):
+            current_original = (original_dataset[idx * window_size:(idx + 1) * window_size])
+            current_reconstructed = (reconstructed_dataset[idx * window_size:(idx + 1) * reconstructed_dataset])
+            sum_window = 0
+
+            for i in range(len(current_original)):
+                for j in range(len(current_original[i])):
+                    sum_window += np.power(current_original[i][j] - current_reconstructed[i][j], 2)
+
+            mse.append(sum_window / (len(current_original) * len(current_original[0])))
+
+        return mse
+
+    @staticmethod
+    def sensitivity_specificity(original, reconstructed, noisy, window_size, rejected):
+        sensitivity = 0
+        specificity = 0
+
+        nb_windows = 0
+        nb_no_added = 0
+        nb_added = 0
+        nb_no_added_no_removed = 0
+        nb_no_added_removed = 0
+        nb_added_no_removed = 0
+        nb_added_removed = 0
+
+        original_dataset = original.unpack_params()
+        reconstructed_dataset = reconstructed.unpack_params()
+        noisy_dataset = noisy.unpack_params()
+
+        for idx in range(len(original_dataset) // window_size):
+            current_original = (original_dataset[idx * window_size:(idx + 1) * window_size])
+            current_reconstructed = (reconstructed_dataset[idx * window_size:(idx + 1) * reconstructed_dataset])
+            current_noisy = (noisy_dataset[idx * window_size:(idx + 1) * reconstructed_dataset])
+
+            if current_original == current_noisy:
+                nb_no_added += 1
+                if rejected[idx]:
+                    nb_no_added_removed += 1
+                else:
+                    nb_no_added_no_removed += 1
+
+            else:
+                nb_added += 1
+                if rejected[idx]:
+                    nb_added_removed += 1
+                else:
+                    nb_added_no_removed += 1
+
+        sensitivity = nb_added_removed / (nb_added_removed + nb_added_no_removed)
+        specificity = nb_added_no_removed / (nb_no_added_no_removed + nb_no_added_removed)
+
+        return sensitivity, specificity

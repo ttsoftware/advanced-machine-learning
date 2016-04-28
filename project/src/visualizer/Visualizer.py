@@ -12,7 +12,7 @@ class Visualizer:
     def __init__(self, dataset):
         self.dataset = dataset
 
-    def visualize_mse(self, calibration_length, threshold_type, window_size, add_artifacts=True, name='figure_mse'):
+    def visualize_mse(self, threshold_type, window_size, name='figure_mse'):
         """
 
         :param add_artifacts:
