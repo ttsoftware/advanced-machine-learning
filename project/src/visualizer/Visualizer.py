@@ -132,10 +132,15 @@ class Visualizer:
         :return: None
         """
         f, axarr = plt.subplots(3, 1)
-        axarr[0].set_title('Corrected EEG')
+        axarr[0].set_title('Original Signal')
+        axarr[1].set_title('Signal wih artifacts simulated')
+        axarr[2].set_title('Signal reconstructed after PCA')
         axarr[0].ticklabel_format(useOffset=False)
+        f.tight_layout()
 
         axarr[0].plot(np.array(original.unpack_params()).T[13])
+        axarr[1].plot(np.array(original.unpack_params()).T[13])
+        axarr[2].plot(np.array(original.unpack_params()).T[13])
         axarr[1].plot(np.array(noisy.unpack_params()).T[13])
         axarr[2].plot(np.array(reconstructed.unpack_params()).T[13])
 

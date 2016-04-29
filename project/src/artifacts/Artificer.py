@@ -50,7 +50,7 @@ class Artificer:
 
     def sine_artifact(self, spike_range_start, spike_range_end, data, mean, var):
         for t in range(spike_range_start, spike_range_end):
-            d = np.sin((np.pi / (spike_range_end - spike_range_start)) * (t - spike_range_start))
+            d = np.sin((2 * np.pi / (spike_range_end - spike_range_start)) * (t - spike_range_start))
 
             for position in range(len(data[t])):
                 data[t][position] += d * self.factors[position]
