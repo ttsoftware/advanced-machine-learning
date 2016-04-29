@@ -99,3 +99,44 @@ class Visualizer:
             axarr[index].plot(np.array(self.reconstructed_dataset.unpack_params()).T[i], color='b')
 
         plt.savefig(name, papertype='a0', pad_inches=0, bbox_inches=0, frameon=False)
+
+    @staticmethod
+    def visualize_all(original, noisy, reconstructed, name='figure_comparison', components=14):
+        """
+        Visualizes the original dataset alongside the dataset with added artifacts
+        and the reconstructed dataset.
+
+        :param name: the name of the image.
+        :param components: How many components should be realized, starting from component 0
+        :return: None
+        """
+        f, axarr = plt.subplots(components, 1)
+        axarr[0].set_title('Corrected EEG')
+        axarr[0].ticklabel_format(useOffset=False)
+
+        for index, i in enumerate(range(components)):
+            axarr[index].plot(np.array(original.unpack_params()).T[i], color='y')
+            axarr[index].plot(np.array(noisy.unpack_params()).T[i], color='r')
+            axarr[index].plot(np.array(reconstructed.unpack_params()).T[i], color='b')
+
+        plt.savefig(name, papertype='a0', pad_inches=0, bbox_inches=0, frameon=False)
+
+    @staticmethod
+    def visualize_timeLine(original, noisy, reconstructed, name='timeline'):
+        """
+        Visualizes the original dataset alongside the dataset with added artifacts
+        and the reconstructed dataset.
+
+        :param name: the name of the image.
+        :param components: How many components should be realized, starting from component 0
+        :return: None
+        """
+        f, axarr = plt.subplots(3, 1)
+        axarr[0].set_title('Corrected EEG')
+        axarr[0].ticklabel_format(useOffset=False)
+
+        axarr[0].plot(np.array(original.unpack_params()).T[13])
+        axarr[1].plot(np.array(noisy.unpack_params()).T[13])
+        axarr[2].plot(np.array(reconstructed.unpack_params()).T[13])
+
+        plt.savefig(name, papertype='a0', pad_inches=0, bbox_inches=0, frameon=False)
