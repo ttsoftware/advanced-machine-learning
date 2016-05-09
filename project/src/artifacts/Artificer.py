@@ -1,5 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
+from sklearn.neighbors import NearestNeighbors
+
 import src.artifacts.pca.PcaProjector as PCA
 
 from src.data.DataSet import DataSet
@@ -7,33 +8,31 @@ from src.data.Normalizer import Normalizer
 
 
 class Artificer:
-    def __init__(self, dataset, add_artifacts=False):
-        self.original_dataset = dataset
-        if add_artifacts:
-            self.has_artifacts = True
-            self.noise_dataset = self.add_artifacts()
-        else:
-            self.has_artifacts = False
-            self.noise_dataset = dataset.clone()
+    def __init__(self, dataset_window):
+        # self.factors = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 3, 4, 40, 100, 300, 800, 400, 50, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # np.linspace(1, 80, len(data[0]))
+        self.factors = [0, 0, 0, 0, 1, 1, 1, 1, 3, 4, 40, 100, 300, 800]
+        self.window = dataset_window
+        self.spike_range_start = None
+        self.spike_range_end = None
+        self.normalizer = None
 
-        self.normalizer = Normalizer(dataset.clone())
-        self.normalized_noise_dataset = self.normalizer.subtract_means(self.noise_dataset.clone())
-
-        self.reconstructed_dataset = None
-
-    def add_artifacts(self, k=None):
+    def add_artifacts(self, spike_size=30):
         """
         Adds k noisy artifacts to self.
         :param k:
         :return:
         """
-        data = np.array(self.original_dataset.unpack_params())
+        spike_offset = (len(self.window) - spike_size) // 2
+
+        self.spike_range_start = spike_offset
+        self.spike_range_end = spike_size + spike_offset
+
+        data = np.array(self.window.unpack_params())
         data_transposed = data.T
 
         mean = np.mean(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
         var = np.var(data_transposed, axis=tuple(range(1, data_transposed.ndim)))
-        self.spike_range_start = 5
-        self.spike_range_end = 35
+
         self.sine_artifact(self.spike_range_start, self.spike_range_end, data, mean, var)
 
         noise_dataset = DataSet(data.tolist())
@@ -41,78 +40,55 @@ class Artificer:
         return noise_dataset
 
     def sine_artifact(self, spike_range_start, spike_range_end, data, mean, var):
-
-        self.factors = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 3, 4, 40, 100, 300, 800, 400, 50, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # np.linspace(1, 80, len(data[0]))
-
         for t in range(spike_range_start, spike_range_end):
             d = np.sin((np.pi / (spike_range_end - spike_range_start)) * (t - spike_range_start))
 
             for position in range(len(data[t])):
                 data[t][position] += d * self.factors[position]
 
-    def put_artifacts(self):
-        self.noise_dataset = self.add_artifacts()
-        self.normalized_noise_dataset = self.normalizer.subtract_means(self.noise_dataset.clone())
-
-    def pca_reconstruction(self, threshold=None):
+    def pca_reconstruction(self, dataset=None, threshold=None):
         """
         Does PCA projection on the normalized noise dataset in order to reconstruct the original
         dataset with artifacts removed
 
         TODO: proper threshold that is not based on percentage
 
+        :param dataset:
         :param threshold: The threshold where the PCA projector will reject principal components
         :return:
         """
-        reconstructed_dataset, max_eigenvalue, rejected = PCA.project(self.normalized_noise_dataset, threshold)
-        self.reconstructed_dataset = self.normalizer.add_means(reconstructed_dataset)
+        if dataset is None:
+            dataset = self.window.clone()
 
-        return max_eigenvalue, rejected
+        self.normalizer = Normalizer(dataset)
+        normalized_noised_window = self.normalizer.subtract_means(dataset)
 
-    def visualize(self, components=14):
-        """
-        Visualizes the original dataset alongside the dataset with added artifacts
-        and the reconstructed dataset.
+        reconstructed_dataset, avg_eigenvalue, max_eigenvalue, rejected = PCA.project(normalized_noised_window, threshold)
+        reconstructed_window = self.normalizer.add_means(reconstructed_dataset)
 
-        :param components: How many components should be realized, starting from component 0
-        :return: None
-        """
-        f, axarr = plt.subplots(components, 1)
-        axarr[0].set_title('Corrected EEG')
-        axarr[0].ticklabel_format(useOffset=False)
-
-        for index, i in enumerate(range(components)):
-            axarr[index].plot(np.array(self.original_dataset.unpack_params()).T[i], color='y')
-            axarr[index].plot(np.array(self.noise_dataset.unpack_params()).T[i], color='r')
-            axarr[index].plot(np.array(self.reconstructed_dataset.unpack_params()).T[i], color='b')
-
-        plt.savefig("figure_artifact", papertype='a0', pad_inches=0, bbox_inches=0, frameon=False)
+        return reconstructed_window, avg_eigenvalue, max_eigenvalue, rejected
 
     def mse(self):
-        new_data = np.array(self.original_dataset.unpack_params())
-        old_data = np.array(self.reconstructed_dataset.unpack_params())
-        sum_all_dataset = 0
-        sum_with_artifacts = 0
-        sum_without_artifacts = 0
-        nb_datapoints_with_artifacts = 0
-        nb_datapoints_without_artifacts = 0
+        original_data = np.array(self.window.unpack_params())
+        reconstructed_data = np.array(self.reconstructed_window.unpack_params())
+        sum_window = 0
+        components_with_artifacts = 0
 
-        for i in range(len(new_data)):
+        for i in range(len(original_data)):
 
-            for j in range(len(new_data[i])):
+            for j in range(len(original_data[i])):
 
-                sum_all_dataset += np.power(new_data[i][j] - old_data[i][j], 2)
+                sum_window += np.power(original_data[i][j] - reconstructed_data[i][j], 2)
 
-                if self.has_artifacts and self.spike_range_start <= i <= self.spike_range_end:
+                if self.factors[j] > 0:
+                    components_with_artifacts += 1
 
-                    if self.factors[j] > 0:
-                        sum_with_artifacts += np.power(new_data[i][j] - old_data[i][j], 2)
-                        nb_datapoints_with_artifacts += 1
-                    else:
-                        sum_without_artifacts += np.power(new_data[i][j] - old_data[i][j], 2)
-                        nb_datapoints_without_artifacts += 1
-                else:
-                    sum_without_artifacts += np.power(new_data[i][j] - old_data[i][j], 2)
-                    nb_datapoints_without_artifacts += 1
+        if components_with_artifacts == 0:
+            # no artifacts in this window
+            pass
 
-        return sum_all_dataset, sum_with_artifacts, sum_without_artifacts, nb_datapoints_with_artifacts, nb_datapoints_without_artifacts
+        # MSE for this window
+        return np.mean(sum_window)
+
+    def get_noised_window(self):
+        return self.noised_window.clone()

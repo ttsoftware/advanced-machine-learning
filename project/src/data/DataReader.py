@@ -7,6 +7,7 @@ class DataReader(object):
     def read_data(filename, delimiter=' '):
         """
         Read our data, and return it in our specified data format.
+        :param delimiter:
         :param String filename:
         :return DataSet:
         """

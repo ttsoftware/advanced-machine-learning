@@ -17,11 +17,11 @@ class TestDataSet(unittest.TestCase):
 
         threshold = 0
         for idx in range(len(dataset) // 40):
-            current_dataset = DataSet(dataset[idx*40:(idx+1)*40])
+            current_dataset = DataSet(dataset[idx * 40:(idx + 1) * 40])
 
             if idx < 10:
                 artificer = Artificer(current_dataset, add_artifacts=False)
-                max_eigenvalue = artificer.pca_reconstruction()
+                max_eigenvalue, rejected = artificer.pca_reconstruction()
                 threshold = max(threshold, max_eigenvalue)
             else:
                 artificer = Artificer(current_dataset, add_artifacts=True)
@@ -39,15 +39,18 @@ class TestDataSet(unittest.TestCase):
 
         print 'Calculating thresholds...'
 
-        threshold = 0
+        max_threshold = 0
+        avg_threshold = 0
         for idx in range(25):
             current_dataset = DataSet(dataset[idx * 40:(idx + 1) * 40])
 
             artificer = Artificer(current_dataset, add_artifacts=False)
-            max_eigenvalue, rejected = artificer.pca_reconstruction()
-            threshold = max(threshold, max_eigenvalue)
+            avg_eigenvalue, max_eigenvalue, rejected = artificer.pca_reconstruction()
+            max_threshold = max(max_threshold, max_eigenvalue)
+            avg_threshold = max(avg_threshold, avg_eigenvalue)
 
-        print 'Threshold: ' + str(threshold)
+        print 'Largest threshold: ' + str(max_threshold)
+        print 'Average threshold: ' + str(avg_threshold)
 
         print '\nTiming PCA reconstructor...'
 
@@ -62,7 +65,14 @@ class TestDataSet(unittest.TestCase):
             artificer.put_artifacts()
 
             start_time_reconstructor = time.time()
-            artificer.pca_reconstruction(threshold)
+            artificer.pca_reconstruction(max_threshold)
             times.append(time.time() - start_time_reconstructor + midway_time)
 
         print 'Time per PCA reconstruction: ' + str(reduce(lambda x, y: x + y, times) / len(times)) + ' sec'
+
+    def test_getter(self):
+        filename = '../../data/emotiv/EEG_Data_filtered.csv'
+        dataset = DataReader.read_data(filename, ',')
+
+        art = Artificer(DataSet(dataset[0:40]), add_artifacts=True)
+        print art.get_noise_dataset()

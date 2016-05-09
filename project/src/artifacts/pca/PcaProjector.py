@@ -2,6 +2,7 @@ import numpy as np
 
 from src.data.DataSet import DataSet
 
+
 def project(dataset, threshold=None):
     """
     Returns a dataset that is reconstructed based on its principal components
@@ -30,7 +31,7 @@ def project(dataset, threshold=None):
                 rejected = True
         #print len(W)
     else:
-        return dataset.clone(), sum(eigenvalues) / len(eigenvalues), rejected
+        return dataset.clone(), sum(eigenvalues) / len(eigenvalues), max(eigenvalues), rejected
 
     W = np.array(W)
 
@@ -46,4 +47,4 @@ def project(dataset, threshold=None):
         for t, datapoint in enumerate(eig_projection.T):
             reconstructed_data[j][t] = sum(eigen_component * datapoint)
 
-    return DataSet(reconstructed_data.T.tolist()), sum(eigenvalues) / len(eigenvalues), rejected
+    return DataSet(reconstructed_data.T.tolist()), sum(eigenvalues) / len(eigenvalues), max(eigenvalues), rejected

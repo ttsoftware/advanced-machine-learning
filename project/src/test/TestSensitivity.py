@@ -1,4 +1,5 @@
 from __future__ import division
+from src.experimentor.ExperimentorService import ExperimentorService
 
 import unittest
 
@@ -12,130 +13,36 @@ from src.data.DataSet import DataSet
 from src.data.Normalizer import Normalizer
 
 
-class TestDataSet(unittest.TestCase):
-    def mean_square(pca, old):
-        new_data = np.array(pca.unpack_params())
-        old_data = np.array(old.unpack_params())
-        sum = 0
-        for i in range(len(new_data)):
-            for j in range(len(new_data[i])):
-                sum += np.power(new_data[i][j] - old_data[i][j], 2)
-        return sum / (len(new_data) * len(new_data[i]))
+class TestSensitivity(unittest.TestCase):
 
-    def test_sensitivity_specificity(self):
-        # filename = '../../data/subject1_csv/eeg_200605191428_epochs/small.csv'
+    def test_max_sensitivity_specificity(self):
         filename = '../../data/emotiv/EEG_Data_filtered.csv'
-
-        dataset = DataReader.read_data(filename, ',')
-        nb_windows = 0
-        nb_no_added = 0
-        nb_added = 0
-        nb_no_added_no_removed = 0
-        nb_no_added_removed = 0
-        nb_added_no_removed = 0
-        nb_added_removed = 0
-
-        sum_mse = 0
-        sum_mse_no_artifacts = 0
-        sum_mse_artifacts = 0
-        nb_with_artifacts = 0
-        nb_without_artifacts = 0
-
-        threshold = 0
-        for idx in range(len(dataset) // 40):
-            current_dataset = DataSet(dataset[idx * 40:(idx + 1) * 40])
-
-            if idx < 10:
-                artificer = Artificer(current_dataset, add_artifacts=False)
-                max_eigenvalue = artificer.pca_reconstruction()[0]
-                threshold = max(threshold, max_eigenvalue)
-            else:
-                nb_windows += 1
-                decision = random.randrange(0, 2)
-                if decision == 0:
-                    nb_no_added += 1
-                    artificer = Artificer(current_dataset, add_artifacts=False)
-                    rejected = artificer.pca_reconstruction(threshold)[1]
-                    mse = artificer.mse()
-                    sum_mse += mse[0]
-                    sum_mse_no_artifacts += mse[2]
-                    nb_without_artifacts += mse[4]
-
-                    if rejected:
-                        nb_no_added_removed += 1
-                    else:
-                        nb_no_added_no_removed += 1
-                        # artificer.visualize()
-                else:
-                    nb_added += 1
-                    artificer = Artificer(current_dataset, add_artifacts=True)
-                    rejected = artificer.pca_reconstruction(threshold)[1]
-                    mse = artificer.mse()
-                    sum_mse += mse[0]
-                    sum_mse_artifacts += mse[1]
-                    sum_mse_no_artifacts += mse[2]
-                    nb_with_artifacts += mse[3]
-                    nb_without_artifacts += mse[4]
-                    if rejected:
-                        nb_added_removed += 1
-                    else:
-                        nb_added_no_removed += 1
-
-        artificer.visualize()
-
-        print 'Number of windows without artifacts: ', nb_no_added
-        print 'Number of windows with artifacts: ', nb_added
-
-        print 'True positive: ', nb_added_removed
-        print 'True negative: ', nb_no_added_no_removed
-        print 'False positive: ', nb_no_added_removed
-        print 'False negative: ', nb_added_no_removed
-
-        print 'Sensitivity: ', (nb_added_removed) / (nb_added_removed + nb_added_no_removed)
-        print 'Specificity: ', (nb_added_no_removed) / (nb_no_added_no_removed + nb_no_added_removed)
-
-        print 'Mean squared error on dataset: ', sum_mse / (
-            len(dataset.unpack_params() * len(dataset.unpack_params()[0])) - 10 * 40 * 14)
-        print 'Mean squared error on segments with artifacts: ', sum_mse_artifacts / nb_with_artifacts
-        print 'Mean squared error on segments with no artifacts: ', sum_mse_no_artifacts / nb_without_artifacts
-        print sum_mse_artifacts
-        print nb_with_artifacts
-        print sum_mse_no_artifacts
-        print nb_without_artifacts
-        print len(artificer.original_dataset.unpack_params()[0])
-
-    def test_plot_mse(self):
-        filename = '../../data/subject1_csv/eeg_200605191428_epochs/small.csv'
-
         dataset = DataReader.read_data(filename, ',')
 
-        normalizer = Normalizer(dataset)
-        dataset = normalizer.normalize_means_std(dataset)
+        filename = '../../data/emotiv/EEG_Data_filtered.csv'
+        dataset = DataReader.read_data(filename, ',')
 
-        old_dataset = dataset.clone()
+        artifact_size = 40
+        window_size = 40
 
-        # Add random noise to 3 randomly chosen columns
-        noisy_set, noise_interval = dataset.add_artifacts()
-        artifact_set = noisy_set[noise_interval[0]:noise_interval[1]]
+        threshold_max, threshold_avg, threshold_avg_max = ExperimentorService.calibrate(dataset, window_size)
 
-        mses = []
-        mses2 = []
-        variances = []
+        artifact_dataset = ExperimentorService.artifactify(dataset, artifact_size, False)
 
-        for variance in np.linspace(0.7, 0.99, num=5):
-            print variance
-            projection_dataset = noisy_set.project_pca(k=None, component_variance=variance)
-            artifact_set_pca = projection_dataset[noise_interval[0]:noise_interval[1]]
-            mse = self.mean_square(projection_dataset, old_dataset)
-            mses.append(mse)
-            mse2 = self.mean_square(DataSet(artifact_set_pca), DataSet(artifact_set))
-            mses2.append(mse2)
-            variances.append(variance)
+        reconstructed_dataset_max, rejections_max = ExperimentorService.pca_reconstruction(artifact_dataset, window_size, threshold_max)
+        reconstructed_dataset_avg, rejections_avg = ExperimentorService.pca_reconstruction(artifact_dataset, window_size, threshold_avg)
+        reconstructed_dataset_avg_max, rejections_max_avg = ExperimentorService.pca_reconstruction(artifact_dataset, window_size, threshold_avg_max)
 
-        f, axarr = plt.subplots(2, 1)
-        axarr[0].set_title('For all dataset')
-        axarr[1].set_title('For sections with artifacts')
-        axarr[0].plot(variances, mses)
-        axarr[1].plot(variances, mses2)
-        axarr[1].set_xlabel('Variance threshold for PCA components')
-        plt.show()
+        sensitivity_max, specificity_max = ExperimentorService.sensitivity_specificity(dataset, artifact_dataset, reconstructed_dataset_max, window_size, rejections_max)
+        sensitivity_avg, specificity_avg = ExperimentorService.sensitivity_specificity(dataset, artifact_dataset, reconstructed_dataset_avg, window_size, rejections_avg)
+        sensitivity_avg_max, specificity_avg_max = ExperimentorService.sensitivity_specificity(dataset, artifact_dataset, reconstructed_dataset_avg_max, window_size, rejections_max_avg)
+
+        print '--- MAX THRESHOLD ---'
+        print 'Sensitivity: ', sensitivity_max
+        print 'Specificity: ', specificity_max
+        print '--- AVG THRESHOLD ---'
+        print 'Sensitivity: ', sensitivity_avg
+        print 'Specificity: ', specificity_avg
+        print '--- AVG_MAX THRESHOLD ---'
+        print 'Sensitivity: ', sensitivity_avg_max
+        print 'Specificity: ', specificity_avg_max
