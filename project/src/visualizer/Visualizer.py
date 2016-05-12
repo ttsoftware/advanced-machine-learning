@@ -131,17 +131,84 @@ class Visualizer:
         :param components: How many components should be realized, starting from component 0
         :return: None
         """
-        f, axarr = plt.subplots(3, 1)
-        axarr[0].set_title('Original Signal')
-        axarr[1].set_title('Signal wih artifacts simulated')
-        axarr[2].set_title('Signal reconstructed after PCA')
-        axarr[0].ticklabel_format(useOffset=False)
-        f.tight_layout()
 
-        axarr[0].plot(np.array(original.unpack_params()).T[13])
-        axarr[1].plot(np.array(original.unpack_params()).T[13])
-        axarr[2].plot(np.array(original.unpack_params()).T[13])
-        axarr[1].plot(np.array(noisy.unpack_params()).T[13])
-        axarr[2].plot(np.array(reconstructed.unpack_params()).T[13])
 
-        plt.savefig(name, papertype='a0', pad_inches=0, bbox_inches=0, frameon=False)
+        f = plt.figure(figsize=(10,4))
+        f.subplots_adjust(bottom=0.2)
+        ax = f.add_subplot(111)
+        ax.plot(np.array(original.unpack_params()).T[13], label='Original signal')
+        ax.set_xlabel('Time (1/60 seconds)')
+        ax.set_ylabel('Amplitude')
+        legend = ax.legend(loc='upper right')
+        plt.savefig('Original_Signal')
+
+        f = plt.figure(figsize=(10,4))
+        f.subplots_adjust(bottom=0.2)
+        ax = f.add_subplot(111)
+        ax.plot(np.array(original.unpack_params()).T[13], label='Original signal')
+        ax.plot(np.array(noisy.unpack_params()).T[13], label='Noisy signal')
+        ax.set_xlabel('Time (1/60 seconds)')
+        ax.set_ylabel('Amplitude')
+        legend = ax.legend(loc='upper right')
+        plt.savefig('With_artifacts')
+
+        f = plt.figure(figsize=(10,4))
+        f.subplots_adjust(bottom=0.2)
+        ax = f.add_subplot(111)
+        ax.plot(np.array(original.unpack_params()).T[13], label='Original signal')
+        ax.plot(np.array(reconstructed.unpack_params()).T[13], label='Reconstructed signal')
+        ax.set_xlabel('Time (1/60 seconds)')
+        ax.set_ylabel('Amplitude')
+        legend = ax.legend(loc='upper right')
+        plt.savefig('After_PCA')
+
+
+    @staticmethod
+    def visualize_mse_on_same(original_dataset, reconstructed_dataset_max,reconstructed_dataset_avg,reconstructed_dataset_avg_max, window_size, name='figure_mse'):
+        """
+
+        :param window_size:
+        :param original_dataset:
+        :param reconstructed_dataset:
+        :param name:
+        :return:
+        """
+
+        f = plt.figure(figsize=(10,4))
+        f.subplots_adjust(bottom=0.2)
+        ax = f.add_subplot(111)
+
+        original_windows = ExperimentorService.windows(original_dataset.clone(), window_size)
+        reconstructed_windows = ExperimentorService.windows(reconstructed_dataset_max.clone(), window_size)
+        mse_windows = []
+
+        for idx, original_window in enumerate(original_windows):
+            mse = ExperimentorService.mse(original_window, reconstructed_windows[idx])
+            mse_windows.append(mse)
+
+        ax.plot(mse_windows, label='Maximum Threshold')
+
+        reconstructed_windows = ExperimentorService.windows(reconstructed_dataset_avg.clone(), window_size)
+        mse_windows = []
+
+        for idx, original_window in enumerate(original_windows):
+            mse = ExperimentorService.mse(original_window, reconstructed_windows[idx])
+            mse_windows.append(mse)
+
+        ax.plot(mse_windows, label='Average Threshold')
+
+        reconstructed_windows = ExperimentorService.windows(reconstructed_dataset_avg_max.clone(), window_size)
+        mse_windows = []
+
+        for idx, original_window in enumerate(original_windows):
+            mse = ExperimentorService.mse(original_window, reconstructed_windows[idx])
+            mse_windows.append(mse)
+
+        ax.plot(mse_windows, label='Maximum average Threshold')
+
+
+        ax.set_xlabel('Window #)')
+        ax.set_ylabel('Mean Squared Error')
+        legend = ax.legend(loc='upper right')
+
+        plt.savefig('Mean_Squared_Comparison')
