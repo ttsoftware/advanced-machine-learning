@@ -44,7 +44,6 @@ class ExperimentorService:
         dataset = dataset.clone()
 
         artifact_dataset = DataSet()
-        artifact_window = []
         spike_size = (window_size // 4) * 3
 
         for window in ExperimentorService.windows(dataset, window_size):
@@ -52,7 +51,7 @@ class ExperimentorService:
             if randomly_add_artifacts:
                 decision = random.randrange(0, 2)
                 if decision:
-                    artifict_window = artificer.add_artifacts(spike_size)
+                    artifact_window = artificer.add_artifacts(spike_size)
                 else:
                     artifact_window = window
             else:

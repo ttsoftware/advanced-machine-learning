@@ -40,7 +40,7 @@ class Visualizer:
         plt.savefig(name)
 
     @staticmethod
-    def visualize_cross_validation(original_dataset, artifact_dataset, thresholds, window_sizes, name='figure_cross_validation'):
+    def visualize_cross_validation_bars(original_dataset, artifact_dataset, thresholds, window_sizes, name='figure_cross_validation_bars'):
         """
 
         :param artifact_dataset:
@@ -52,7 +52,7 @@ class Visualizer:
         """
 
         # Do cross validation
-        mse = []
+        mse = {thresholds[0]: [], thresholds[1]: [], thresholds[2]: []}
 
         for threshold in thresholds:
             for window_size in window_sizes:
@@ -65,19 +65,70 @@ class Visualizer:
 
                     current_mse += [ExperimentorService.mse(original_window, reconstructed_window)]
 
-                mse += [np.mean(current_mse)]
+                mse[threshold] += [np.mean(current_mse)]
 
-        f = plt.figure()
-        ax = f.add_subplot(111)
-        rects = ax.bar(np.arange(len(mse)), mse, color='b')
+        fig, ax = plt.subplots()
 
-        ax.set_ylabel('Mean squared error')
+        indexs = np.arange(len(mse[thresholds[0]]))
+        width = 0.20
+
+        ax.bar(indexs, mse[thresholds[0]], width, label='Max eigenvalue threshold', color='c', alpha=0.8)
+        ax.bar(indexs + width, mse[thresholds[1]], width, label='Average eigenvalue threshold', color='b', alpha=0.8)
+        ax.bar(indexs + width*2, mse[thresholds[2]], width, label='Average of max eigenvalue threshold', color='m', alpha=0.8)
+
+        ax.set_xticks(indexs + width*1.5)
+        ax.set_xticklabels([str(window_size) for window_size in window_sizes])
+
         ax.set_title('mse cross validation')
-        ax.set_xticks(np.arange(len(mse)))
-        labels = ['max_' + str(window_size) for window_size in window_sizes] + ['avg_' + str(window_size) for window_size in window_sizes] + ['avg-max_' + str(window_size) for window_size in window_sizes]
-        ax.set_xticklabels(labels)
-        plt.xticks(rotation=70)
+        ax.set_ylabel('Mean squared error')
+        ax.set_xlabel('Window size')
 
+        plt.legend(loc='upper right')
+        plt.savefig(name)
+
+    @staticmethod
+    def visualize_cross_validation_curves(original_dataset, artifact_dataset, thresholds, window_sizes, name='figure_cross_validation_curves'):
+        """
+
+        :param artifact_dataset:
+        :param thresholds:
+        :param original_dataset:
+        :param window_sizes:
+        :param name:
+        :return:
+        """
+
+        # Do cross validation
+        mse = {thresholds[0]: [], thresholds[1]: [], thresholds[2]: []}
+
+        for threshold in thresholds:
+            for window_size in window_sizes:
+                original_windows = ExperimentorService.windows(original_dataset.clone(), window_size)
+                artifact_windows = ExperimentorService.windows(artifact_dataset.clone(), window_size)
+
+                current_mse = []
+                for idx, original_window in enumerate(original_windows):
+                    reconstructed_window, rejected = ExperimentorService.pca_reconstruction(artifact_windows[idx],
+                                                                                            window_size, threshold)
+
+                    current_mse += [ExperimentorService.mse(original_window, reconstructed_window)]
+
+                mse[threshold] += [np.mean(current_mse)]
+
+        fig, ax = plt.subplots()
+
+        ax.plot(mse[thresholds[0]], label='Max eigenvalue threshold', color='c')
+        ax.plot(mse[thresholds[1]], label='Average eigenvalue threshold', color='b')
+        ax.plot(mse[thresholds[2]], label='Average of max eigenvalue threshold', color='m')
+
+        ax.set_xticks(range(len(window_sizes)))
+        ax.set_xticklabels([str(window_size) for window_size in window_sizes])
+
+        ax.set_title('mse cross validation')
+        ax.set_ylabel('Mean squared error')
+        ax.set_xlabel('Window size')
+
+        plt.legend(loc='upper right')
         plt.savefig(name)
 
     def visualize_data(self, name='figure_artifacts_data', components=14):
