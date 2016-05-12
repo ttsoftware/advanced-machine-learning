@@ -5,6 +5,7 @@ import numpy as np
 from src.artifacts.Artificer import Artificer
 from src.data.DataSet import DataSet
 
+
 class ExperimentorService:
 
     def __init__(self):
@@ -115,12 +116,10 @@ class ExperimentorService:
         noisy_windows = ExperimentorService.windows(noisy.clone(), window_size)
 
         for idx, original_window in enumerate(original_windows):
-            reconstructed_window = reconstructed_windows[idx]
+            original_window = original_windows[idx]
             noisy_window = noisy_windows[idx]
 
-            # TODO: FIIIIIIIX
-
-            if current_original == current_noisy:
+            if original_window == noisy_window:
                 nb_no_added += 1
                 if rejected[idx]:
                     nb_no_added_removed += 1
