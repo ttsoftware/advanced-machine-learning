@@ -137,7 +137,7 @@ class Visualizer:
         f.subplots_adjust(bottom=0.2)
         ax = f.add_subplot(111)
         ax.plot(np.array(original.unpack_params()).T[13], label='Original signal')
-        ax.set_xlabel('Time (1/60 seconds)')
+        ax.set_xlabel('Time (1/128 seconds)')
         ax.set_ylabel('Amplitude')
         legend = ax.legend(loc='upper right')
         plt.savefig('Original_Signal')
@@ -147,7 +147,7 @@ class Visualizer:
         ax = f.add_subplot(111)
         ax.plot(np.array(original.unpack_params()).T[13], label='Original signal')
         ax.plot(np.array(noisy.unpack_params()).T[13], label='Noisy signal')
-        ax.set_xlabel('Time (1/60 seconds)')
+        ax.set_xlabel('Time (1/128 seconds)')
         ax.set_ylabel('Amplitude')
         legend = ax.legend(loc='upper right')
         plt.savefig('With_artifacts')
@@ -157,7 +157,7 @@ class Visualizer:
         ax = f.add_subplot(111)
         ax.plot(np.array(original.unpack_params()).T[13], label='Original signal')
         ax.plot(np.array(reconstructed.unpack_params()).T[13], label='Reconstructed signal')
-        ax.set_xlabel('Time (1/60 seconds)')
+        ax.set_xlabel('Time (1/128 seconds)')
         ax.set_ylabel('Amplitude')
         legend = ax.legend(loc='upper right')
         plt.savefig('After_PCA')
@@ -186,7 +186,7 @@ class Visualizer:
             mse = ExperimentorService.mse(original_window, reconstructed_windows[idx])
             mse_windows.append(mse)
 
-        ax.plot(mse_windows, label='Maximum Threshold')
+        ax.plot(mse_windows, label='Maximum Threshold', linestyle=':',color='b')
 
         reconstructed_windows = ExperimentorService.windows(reconstructed_dataset_avg.clone(), window_size)
         mse_windows = []
@@ -195,7 +195,7 @@ class Visualizer:
             mse = ExperimentorService.mse(original_window, reconstructed_windows[idx])
             mse_windows.append(mse)
 
-        ax.plot(mse_windows, label='Average Threshold')
+        ax.plot(mse_windows, label='Average Threshold', linestyle=':',color='g')
 
         reconstructed_windows = ExperimentorService.windows(reconstructed_dataset_avg_max.clone(), window_size)
         mse_windows = []
@@ -204,11 +204,11 @@ class Visualizer:
             mse = ExperimentorService.mse(original_window, reconstructed_windows[idx])
             mse_windows.append(mse)
 
-        ax.plot(mse_windows, label='Maximum average Threshold')
+        ax.plot(mse_windows, label='Maximum average Threshold', linestyle=':', color='r')
 
 
         ax.set_xlabel('Window #)')
         ax.set_ylabel('Mean Squared Error')
-        legend = ax.legend(loc='upper right')
+        legend = ax.legend(loc='upper right', prop={'size':6})
 
         plt.savefig('Mean_Squared_Comparison')

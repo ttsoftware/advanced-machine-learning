@@ -52,7 +52,7 @@ class ExperimentorService:
             if randomly_add_artifacts:
                 decision = random.randrange(0, 2)
                 if decision:
-                    artifict_window = artificer.add_artifacts(spike_size)
+                    artifact_window = artificer.add_artifacts(spike_size)
                 else:
                     artifact_window = window
             else:
