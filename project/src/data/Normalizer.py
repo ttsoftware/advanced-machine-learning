@@ -24,7 +24,8 @@ class Normalizer(object):
             self.dimensions_stds += [np.std(dim_values)]
             self.dimensions_variance += [np.var(dim_values)]
 
-    def normalize(self, normalize_function, inputset):
+    @staticmethod
+    def normalize(normalize_function, inputset):
         """
         Return the normalized inputset using the given {normalize_function} in each dimension
         :param lambda normalize_function:

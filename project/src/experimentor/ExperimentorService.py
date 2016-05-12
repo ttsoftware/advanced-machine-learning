@@ -25,15 +25,15 @@ class ExperimentorService:
 
         threshold_max = 0
         threshold_avg = 0
-        threshold_avg_max = 0
+        threshold_avg_max = []
         for window in ExperimentorService.windows(dataset, window_size):
 
-            artificer = Artificer(window, add_artifacts=False)
-            avg_eigenvalue, max_eigenvalue, rejected = artificer.pca_reconstruction()
+            artificer = Artificer(window)
+            _, avg_eigenvalue, max_eigenvalue, _ = artificer.pca_reconstruction()
 
             threshold_max = max(threshold_max, max_eigenvalue)
             threshold_avg = max(threshold_avg, avg_eigenvalue)
-            threshold_avg_max += max_eigenvalue
+            threshold_avg_max += [max_eigenvalue]
 
         threshold_avg_max = np.mean(threshold_avg_max)
 
@@ -44,18 +44,20 @@ class ExperimentorService:
         dataset = dataset.clone()
 
         artifact_dataset = DataSet()
+        artifact_window = []
         spike_size = (window_size // 4) * 3
 
         for window in ExperimentorService.windows(dataset, window_size):
+            artificer = Artificer(window)
             if randomly_add_artifacts:
                 decision = random.randrange(0, 2)
                 if decision:
-                    artificer = Artificer(window, spike_size=spike_size, add_artifacts=True)
+                    artifict_window = artificer.add_artifacts(spike_size)
                 else:
-                    artificer = Artificer(window, add_artifacts=False)
+                    artifact_window = window
             else:
-                artificer = Artificer(window, spike_size=spike_size, add_artifacts=True)
-            artifact_dataset += artificer.get_noised_window()
+                artifact_window = artificer.add_artifacts(spike_size)
+            artifact_dataset += artifact_window
 
         if len(dataset) > len(artifact_dataset):
             amount_missing = len(dataset) - len(artifact_dataset)
@@ -72,9 +74,9 @@ class ExperimentorService:
         rejections = []
 
         for window in ExperimentorService.windows(dataset, window_size):
-            artificer = Artificer(window, add_artifacts=False)
-            threshold_max, threshold_avg, rejected = artificer.pca_reconstruction(threshold)
-            reconstructed_dataset += artificer.get_reconstructed_window()
+            artificer = Artificer(window)
+            reconstructed_window, _, _, rejected = artificer.pca_reconstruction(threshold=threshold)
+            reconstructed_dataset += reconstructed_window
             rejections += [rejected]
 
         return reconstructed_dataset, rejections
