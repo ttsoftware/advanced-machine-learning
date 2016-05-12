@@ -69,10 +69,3 @@ class TestDataSet(unittest.TestCase):
             times.append(time.time() - start_time_reconstructor + midway_time)
 
         print 'Time per PCA reconstruction: ' + str(reduce(lambda x, y: x + y, times) / len(times)) + ' sec'
-
-    def test_getter(self):
-        filename = '../../data/emotiv/EEG_Data_filtered.csv'
-        dataset = DataReader.read_data(filename, ',')
-
-        art = Artificer(DataSet(dataset[0:40]), add_artifacts=True)
-        print art.get_noise_dataset()
