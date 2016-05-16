@@ -1,3 +1,5 @@
+from __future__ import division
+
 import random
 
 import numpy as np
@@ -44,6 +46,8 @@ class ExperimentorService:
     def artifactify(dataset, window_size, randomly_add_artifacts=True):
         dataset = dataset.clone()
 
+        artifact_list = []
+
         artifact_dataset = DataSet()
         spike_size = (window_size // 4) * 3
 
@@ -53,18 +57,21 @@ class ExperimentorService:
                 decision = random.randrange(0, 2)
                 if decision:
                     artifact_window = artificer.add_artifacts(spike_size)
+                    artifact_list += [1]
                 else:
                     artifact_window = window
+                    artifact_list += [0]
             else:
                 artifact_window = artificer.add_artifacts(spike_size)
+                artifact_list += [1]
             artifact_dataset += artifact_window
 
         if len(dataset) > len(artifact_dataset):
             amount_missing = len(dataset) - len(artifact_dataset)
 
-            return DataSet(artifact_dataset + dataset[-amount_missing:])
+            return DataSet(artifact_dataset + dataset[-amount_missing:]), artifact_list
 
-        return artifact_dataset
+        return artifact_dataset, artifact_list
 
     @staticmethod
     def pca_reconstruction(dataset, window_size, threshold):
@@ -90,50 +97,53 @@ class ExperimentorService:
         original_dataset = original.unpack_params()
         reconstructed_dataset = reconstructed.unpack_params()
 
-        sum_window = 0
+        sum_window = []
 
         for i in range(len(original_dataset)):
             for j in range(len(original_dataset[i])):
-                sum_window += np.power(original_dataset[i][j] - reconstructed_dataset[i][j], 2)
+                sum_window += [np.power(original_dataset[i][j] - reconstructed_dataset[i][j], 2)]
 
-        return sum_window / (len(original_dataset) * len(original_dataset[0]))
+        return sum_window
 
     @staticmethod
-    def sensitivity_specificity(original, reconstructed, noisy, window_size, rejected):
-        sensitivity = 0
-        specificity = 0
+    def difference(original, reconstructed):
+        original_dataset = original.unpack_params()
+        reconstructed_dataset = reconstructed.unpack_params()
 
-        nb_windows = 0
-        nb_no_added = 0
-        nb_added = 0
-        nb_no_added_no_removed = 0
-        nb_no_added_removed = 0
-        nb_added_no_removed = 0
-        nb_added_removed = 0
+        differences = []
 
-        original_windows = ExperimentorService.windows(original.clone(), window_size)
-        reconstructed_windows = ExperimentorService.windows(reconstructed.clone(), window_size)
-        noisy_windows = ExperimentorService.windows(noisy.clone(), window_size)
+        for i in range(len(original_dataset)):
+            for j in range(len(original_dataset[i])):
+                difference = abs(original_dataset[i][j] - reconstructed_dataset[i][j])
+                differences += [difference / original_dataset[i][j] * 100]
 
-        for idx, original_window in enumerate(original_windows):
-            original_window = original_windows[idx]
-            noisy_window = noisy_windows[idx]
+        return differences
 
-            if original_window == noisy_window:
-                nb_no_added += 1
-                if rejected[idx]:
-                    nb_no_added_removed += 1
+    @staticmethod
+    def sensitivity_specificity(rejected_list, artifacts):
+
+        nb_no_added = len(artifacts) - sum(artifacts)
+        nb_added = sum(artifacts)
+        true_negative = 0
+        false_positive = 0
+        false_negative = 0
+        true_positive = 0
+
+        for idx, rejected in enumerate(rejected_list):
+
+            if rejected == artifacts[idx]:
+                if rejected_list[idx]:
+                    false_positive += 1
                 else:
-                    nb_no_added_no_removed += 1
+                    true_negative += 1
 
             else:
-                nb_added += 1
-                if rejected[idx]:
-                    nb_added_removed += 1
+                if rejected_list[idx]:
+                    true_positive += 1
                 else:
-                    nb_added_no_removed += 1
+                    false_negative += 1
 
-        sensitivity = nb_added_removed / (nb_added_removed + nb_added_no_removed)
-        specificity = nb_added_no_removed / (nb_no_added_no_removed + nb_no_added_removed)
+        sensitivity = true_positive / (true_positive + false_negative)
+        specificity = true_negative / (true_negative + false_positive)
 
         return sensitivity, specificity

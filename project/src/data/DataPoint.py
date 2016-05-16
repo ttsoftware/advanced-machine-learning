@@ -20,3 +20,6 @@ class DataPoint(object):
 
     def get_vector(self):
         return np.array(map(lambda x: [x], self.params[:]))
+
+    def __ne__(self, other):
+        return self.params != other.params
