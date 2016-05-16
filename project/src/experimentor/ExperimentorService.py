@@ -106,6 +106,20 @@ class ExperimentorService:
         return sum_window / (len(original_dataset) * len(original_dataset[0]))
 
     @staticmethod
+    def difference(original, reconstructed):
+        original_dataset = original.unpack_params()
+        reconstructed_dataset = reconstructed.unpack_params()
+
+        differences = []
+
+        for i in range(len(original_dataset)):
+            for j in range(len(original_dataset[i])):
+                difference = abs(original_dataset[i][j] - reconstructed_dataset[i][j])
+                differences += [difference / original_dataset[i][j]]
+
+        return sum(differences)
+
+    @staticmethod
     def sensitivity_specificity(rejected_list, artifacts):
 
         nb_no_added = len(artifacts) - sum(artifacts)

@@ -87,6 +87,56 @@ class Visualizer:
         plt.savefig(name)
 
     @staticmethod
+    def visualize_cross_validation_bars_percentage(original_dataset, artifact_dataset, thresholds, window_sizes,
+                                        name='figure_cross_validation_bars_difference'):
+        """
+
+        :param artifact_dataset:
+        :param thresholds:
+        :param original_dataset:
+        :param window_sizes:
+        :param name:
+        :return:
+        """
+
+        # Do cross validation
+        differences = {thresholds[0]: [], thresholds[1]: [], thresholds[2]: []}
+
+        for threshold in thresholds:
+            for window_size in window_sizes:
+                original_windows = ExperimentorService.windows(original_dataset.clone(), window_size)
+                artifact_windows = ExperimentorService.windows(artifact_dataset.clone(), window_size)
+
+                current_difference = []
+                for idx, original_window in enumerate(original_windows):
+                    reconstructed_window, rejected = ExperimentorService.pca_reconstruction(artifact_windows[idx],
+                                                                                            window_size, threshold)
+
+                    current_difference += [ExperimentorService.difference(original_window, reconstructed_window)]
+
+                differences[threshold] += [np.mean(current_difference)]
+
+        fig, ax = plt.subplots()
+
+        indexs = np.arange(len(differences[thresholds[0]]))
+        width = 0.20
+
+        ax.bar(indexs, differences[thresholds[0]], width, label='Max eigenvalue threshold', color='c', alpha=0.8)
+        ax.bar(indexs + width, differences[thresholds[1]], width, label='Average eigenvalue threshold', color='b', alpha=0.8)
+        ax.bar(indexs + width * 2, differences[thresholds[2]], width, label='Average of max eigenvalue threshold', color='m',
+               alpha=0.8)
+
+        ax.set_xticks(indexs + width * 1.5)
+        ax.set_xticklabels([str(window_size) for window_size in window_sizes])
+
+        ax.set_title('Difference cross validation')
+        ax.set_ylabel('Difference %')
+        ax.set_xlabel('Window size')
+
+        plt.legend(loc='upper right')
+        plt.savefig(name)
+
+    @staticmethod
     def visualize_cross_validation_curves(original_dataset, artifact_dataset, thresholds, window_sizes, name='figure_cross_validation_curves'):
         """
 
