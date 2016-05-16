@@ -11,6 +11,7 @@ class Artificer:
     def __init__(self, dataset_window):
         # self.factors = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 3, 4, 40, 100, 300, 800, 400, 50, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # np.linspace(1, 80, len(data[0]))
         self.factors = [0, 0, 0, 0, 1, 1, 1, 1, 3, 4, 40, 100, 300, 800]
+        self.factors = map(lambda x: x*2, self.factors)
         self.window = dataset_window
         self.spike_range_start = None
         self.spike_range_end = None

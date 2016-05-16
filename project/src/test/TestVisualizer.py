@@ -70,13 +70,14 @@ class TestDataSet(unittest.TestCase):
         window_size = 40
 
         threshold_max, threshold_avg, threshold_avg_max = ExperimentorService.calibrate(training_set, window_size)
-
+        print threshold_max
+        print threshold_avg
         artifact_dataset = ExperimentorService.artifactify(test_set, artifact_size, True)
 
-        reconstructed_dataset_avg, rejections = ExperimentorService.pca_reconstruction(artifact_dataset, window_size, threshold_avg)
+        reconstructed_dataset_avg, rejections = ExperimentorService.pca_reconstruction(artifact_dataset, window_size, threshold_max)
 
-        Visualizer.visualize_all(test_set, artifact_dataset, reconstructed_dataset_avg)
-        Visualizer.visualize_timeLine(test_set, artifact_dataset, reconstructed_dataset_avg)
+        #Visualizer.visualize_all(test_set, artifact_dataset, reconstructed_dataset_avg)
+        Visualizer.visualize_timeLine(test_set, artifact_dataset, reconstructed_dataset_avg, name='timeline_max')
 
     def test_compare_mse(self):
         filename = '../../data/emotiv/EEG_Data_filtered.csv'
