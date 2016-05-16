@@ -116,10 +116,10 @@ class TestDataSet(unittest.TestCase):
         artifact_size = 60
         window_size = 40
 
-        artifact_dataset, _ = ExperimentorService.artifactify(test_set, artifact_size, True)
+        artifact_dataset, _ = ExperimentorService.artifactify(test_set, artifact_size, False)
 
         threshold_max, threshold_avg, threshold_avg_max = ExperimentorService.calibrate(training_set, window_size)
 
         thresholds = [threshold_max, threshold_avg, threshold_avg_max]
         window_sizes = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
-        Visualizer.visualize_cross_validation_bars_percentage(test_set, artifact_dataset, thresholds, window_sizes, name="figure_cross_validation_bars_difference")
+        Visualizer.visualize_cross_validation_bars_percentage(test_set, test_set, thresholds, window_sizes, name="figure_cross_validation_bars_difference_all_artifacts")

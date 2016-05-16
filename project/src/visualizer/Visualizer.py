@@ -101,8 +101,9 @@ class Visualizer:
 
         # Do cross validation
         differences = {thresholds[0]: [], thresholds[1]: [], thresholds[2]: []}
+        threshold_names = ['max', 'avg', 'avg_max']
 
-        for threshold in thresholds:
+        for i, threshold in enumerate(thresholds):
             for window_size in window_sizes:
                 original_windows = ExperimentorService.windows(original_dataset.clone(), window_size)
                 artifact_windows = ExperimentorService.windows(artifact_dataset.clone(), window_size)
@@ -112,9 +113,11 @@ class Visualizer:
                     reconstructed_window, rejected = ExperimentorService.pca_reconstruction(artifact_windows[idx],
                                                                                             window_size, threshold)
 
-                    current_difference += [ExperimentorService.difference(original_window, reconstructed_window)]
+                    current_difference += ExperimentorService.difference(original_window, reconstructed_window)
 
                 differences[threshold] += [np.mean(current_difference)]
+                print 'threshold: ' + threshold_names[i] + ' - window size: ' + str(window_size) + ' - difference: ' + str(np.mean(current_difference))
+
 
         fig, ax = plt.subplots()
 

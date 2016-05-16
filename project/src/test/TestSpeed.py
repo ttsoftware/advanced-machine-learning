@@ -15,7 +15,7 @@ class TestSpeed(unittest.TestCase):
         training_set, test_set = ExperimentorService.split_dataset(dataset, ratio=0.2)
 
         artifact_size = 30
-        window_size = 128
+        window_size = 55
 
         threshold_max, threshold_avg, threshold_avg_max = ExperimentorService.calibrate(training_set, window_size)
 

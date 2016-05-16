@@ -115,9 +115,9 @@ class ExperimentorService:
         for i in range(len(original_dataset)):
             for j in range(len(original_dataset[i])):
                 difference = abs(original_dataset[i][j] - reconstructed_dataset[i][j])
-                differences += [difference / original_dataset[i][j]]
+                differences += [difference / original_dataset[i][j] * 100]
 
-        return sum(differences)
+        return differences
 
     @staticmethod
     def sensitivity_specificity(rejected_list, artifacts):
