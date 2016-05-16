@@ -65,3 +65,11 @@ class DataSet(list):
         :return:
         """
         return DataSet(self[:])
+
+    def __eq__(self, other):
+        flag = True
+        for idx, datapoint in enumerate(self):
+            if other[idx] != datapoint:
+                flag = False
+
+        return flag
