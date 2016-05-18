@@ -3,6 +3,7 @@ import unittest
 from src.data.DataReader import DataReader
 from src.experimentor.ExperimentorService import ExperimentorService
 from src.visualizer.Visualizer import Visualizer
+import numpy as np
 
 
 class TestDataSet(unittest.TestCase):
@@ -16,7 +17,7 @@ class TestDataSet(unittest.TestCase):
 
         artifact_dataset, _ = ExperimentorService.artifactify(test_set, artifact_size, randomly_add_artifacts=True)
 
-        window_sizes = range(10, 151, 5)
+        window_sizes = range(10, 300, 5)
         Visualizer.visualize_cross_validation_bars(training_set, test_set, artifact_dataset, window_sizes, name="figure_cross_validation_bars2")
 
     def test_visualize_mse_curves(self):
@@ -45,7 +46,7 @@ class TestDataSet(unittest.TestCase):
         training_set, test_set = ExperimentorService.split_dataset(dataset, ratio=0.2)
 
         artifact_size = 20
-        window_size = 105
+        window_size = 40
 
         threshold_max, threshold_avg, threshold_avg_max = ExperimentorService.calibrate(training_set, window_size)
 
@@ -55,9 +56,9 @@ class TestDataSet(unittest.TestCase):
 
         artifact_dataset, _ = ExperimentorService.artifactify(test_set, artifact_size, True)
 
-        reconstructed_dataset_max, rejections = ExperimentorService.pca_reconstruction(artifact_dataset, window_size, threshold_avg)
+        reconstructed_dataset_max, rejections = ExperimentorService.pca_reconstruction(artifact_dataset, window_size, threshold_max)
 
-        Visualizer.visualize_timeLine(test_set, artifact_dataset, reconstructed_dataset_max)
+        Visualizer.visualize_timeLine(dataset, test_set, artifact_dataset, reconstructed_dataset_max)
 
     def test_compare_mse(self):
         filename = '../../data/emotiv/EEG_Data_filtered.csv'
@@ -70,6 +71,10 @@ class TestDataSet(unittest.TestCase):
 
         threshold_max, threshold_avg, threshold_avg_max = ExperimentorService.calibrate(training_set, window_size)
 
+        print threshold_max
+        print threshold_avg
+        print threshold_avg_max
+
         artifact_dataset, _ = ExperimentorService.artifactify(test_set, artifact_size, True)
 
         reconstructed_dataset_avg, rejections = ExperimentorService.pca_reconstruction(artifact_dataset, window_size, threshold_avg)
@@ -77,6 +82,8 @@ class TestDataSet(unittest.TestCase):
         reconstructed_dataset_avg_max, rejections = ExperimentorService.pca_reconstruction(artifact_dataset, window_size, threshold_avg_max)
 
         Visualizer.visualize_mse_on_same(test_set, reconstructed_dataset_max, reconstructed_dataset_avg, reconstructed_dataset_avg_max, window_size)
+
+
 
     def test_visualize_mse_bars_no_artifacts(self):
         filename = '../../data/emotiv/EEG_Data_filtered.csv'
