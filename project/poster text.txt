@@ -1,0 +1,16 @@
+During real-time signal analysis data will be treated in small time windows. We slice our dataset into similar small windows, in order to simulate this behaviour.
+
+Given a window of multi-channel EEG input, we subtract the means of each channel in order to normalize. We calculate the eigenvectors and eigenvalues from the covariance of the window. We keep the eigenvectors, whose eigenvalues are below a certain threshold and discard the ones above. Components with eigenvalues above the threshold are likely to represent artifacts, since artifacts will increase variance signifantly. We project the window onto the remaining eigenvectors and then back into the original channel space. Lastly we add the subtracted means. 
+
+The eigenvalue threshold is chosen from a calibration period on the input source, where we assume all windows of data to be artifact free. We calculate the eigenvectors and eigenvalues of the artifact-free windows, and based on these eigenvalues we can calculate the following three different eigenvalue thresholds:
+
+    * The maximum eigenvalue of all the calibration windows.
+        - We expect to only reject components representing artifacts, since their variance is assumed to be above the variances found during calibration.
+    * The average eigenvalue of all the calibration windows
+        - We expect to reject all components representing artifacts, with the risk of also rejecting some components not representing artifacts.
+    * The average of the largest eigenvalue in each calibration window.
+        - We expect similar behaviour to that of the maximum eigenvalue threshold, with the advantage of evening out accidental high-variance during calibration and the disadvantage of the risk of rejecting some components not representing artifacts.
+    
+Since we assume these windows to be free of artifacts, we also assume their variance to be significantly smaller than windows with artifacts.
+
+We compared the relative error of different window sizes for each threshold, where the relative error for each datapoint is the difference between the original value and the reconstructed value, divided by the original value. We chose this error measure because it is more sensitive to small differences compared to mean-squared-error.
