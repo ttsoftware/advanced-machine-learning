@@ -50,12 +50,14 @@ class ExperimentorService:
 
         artifact_dataset = DataSet()
         spike_size = (window_size // 4) * 3
+        add = True
 
         for window in ExperimentorService.windows(dataset, window_size):
             artificer = Artificer(window)
             if randomly_add_artifacts:
                 decision = random.randrange(0, 2)
-                if decision:
+                if decision and add:
+                    add = False
                     artifact_window = artificer.add_artifacts(spike_size)
                     artifact_list += [1]
                 else:
