@@ -10,8 +10,9 @@ from src.data.Normalizer import Normalizer
 class Artificer:
     def __init__(self, dataset_window):
         # self.factors = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 3, 4, 40, 100, 300, 800, 400, 50, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # np.linspace(1, 80, len(data[0]))
-        self.factors = [0, 0, 0, 0, 1, 1, 1, 1, 3, 4, 40, 100, 300, 800]
-        self.factors = map(lambda x: x*2, self.factors)
+        self.factors = [0, 0, 0, 0, 1, 1, 1, 1, 3, 4, 40, 80, 100, 800]
+        #self.factors = [0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 150]
+        # self.factors = map(lambda x: x*2, self.factors)
         self.window = dataset_window
         self.spike_range_start = None
         self.spike_range_end = None
@@ -41,11 +42,13 @@ class Artificer:
         return noise_dataset
 
     def sine_artifact(self, spike_range_start, spike_range_end, data, mean, var):
+        sinus = []
+
         for t in range(spike_range_start, spike_range_end):
             d = np.sin((2 * np.pi / (spike_range_end - spike_range_start)) * (t - spike_range_start))
 
             for position in range(len(data[t])):
-                data[t][position] += d * self.factors[position]
+                data[t][position] =  data[t][position] + d * self.factors[position]
 
     def pca_reconstruction(self, dataset=None, threshold=None):
         """

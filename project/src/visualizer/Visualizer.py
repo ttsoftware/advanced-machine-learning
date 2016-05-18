@@ -251,7 +251,7 @@ class Visualizer:
         plt.savefig(name, papertype='a0', pad_inches=0, bbox_inches=0, frameon=False)
 
     @staticmethod
-    def visualize_timeLine(original, noisy, reconstructed, name='timeline'):
+    def visualize_timeLine(original, test, noisy, reconstructed, name='timeline'):
         """
         Visualizes the original dataset alongside the dataset with added artifacts
         and the reconstructed dataset.
@@ -266,6 +266,7 @@ class Visualizer:
         f.subplots_adjust(bottom=0.2)
         ax = f.add_subplot(111)
         ax.plot(np.array(original.unpack_params()).T[13], label='Original signal')
+        plt.axvline(x=280, color='black')
         ax.set_xlabel('Time (1/128 seconds)')
         ax.set_ylabel('Amplitude')
         legend = ax.legend(loc='upper right')
@@ -274,7 +275,7 @@ class Visualizer:
         f = plt.figure(figsize=(10,4))
         f.subplots_adjust(bottom=0.2)
         ax = f.add_subplot(111)
-        ax.plot(np.array(original.unpack_params()).T[13], label='Original signal')
+        ax.plot(np.array(test.unpack_params()).T[13], label='Original signal')
         ax.plot(np.array(noisy.unpack_params()).T[13], label='Noisy signal')
         ax.set_xlabel('Time (1/128 seconds)')
         ax.set_ylabel('Amplitude')
@@ -284,7 +285,7 @@ class Visualizer:
         f = plt.figure(figsize=(10,4))
         f.subplots_adjust(bottom=0.2)
         ax = f.add_subplot(111)
-        ax.plot(np.array(original.unpack_params()).T[13], label='Original signal')
+        ax.plot(np.array(test.unpack_params()).T[13], label='Original signal')
         ax.plot(np.array(reconstructed.unpack_params()).T[13], label='Reconstructed signal')
         ax.set_xlabel('Time (1/128 seconds)')
         ax.set_ylabel('Amplitude')
