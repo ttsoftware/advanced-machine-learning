@@ -89,6 +89,7 @@ class Visualizer:
         ax.bar(indexs, mse['max'], width, label='Max eigenvalue threshold', color='c', alpha=0.8)
         ax.bar(indexs + width, mse['avg'], width, label='Average eigenvalue threshold', color='b', alpha=0.8)
         ax.bar(indexs + width*2, mse['avg_max'], width, label='Average of max eigenvalue threshold', color='m', alpha=0.8)
+        ax.set_ylim([0,1500])
 
         ax.set_xticks(indexs + width*1.5)
         ax.set_xticklabels([str(window_size) for window_size in window_sizes])
