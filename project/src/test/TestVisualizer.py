@@ -17,13 +17,11 @@ class TestDataSet(unittest.TestCase):
 
         artifact_dataset, _ = ExperimentorService.artifactify(test_set, artifact_size, randomly_add_artifacts=True)
 
-        window_sizes = range(10, 300, 5)
+        window_sizes = range(10, 301, 5)
         Visualizer.visualize_cross_validation_bars(training_set, test_set, artifact_dataset, window_sizes, name="figure_cross_validation_bars2")
 
     def test_visualize_mse_curves(self):
         """
-        TODO: PRINT THE FUCKING BEST WINDOW SIZES FOR EACH THRESHOLD
-
         :return:
         """
 
@@ -46,7 +44,7 @@ class TestDataSet(unittest.TestCase):
         training_set, test_set = ExperimentorService.split_dataset(dataset, ratio=0.2)
 
         artifact_size = 20
-        window_size = 40
+        window_size = 20
 
         threshold_max, threshold_avg, threshold_avg_max = ExperimentorService.calibrate(training_set, window_size)
 

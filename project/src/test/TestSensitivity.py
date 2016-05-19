@@ -22,7 +22,7 @@ class TestSensitivity(unittest.TestCase):
         training_set, test_set = ExperimentorService.split_dataset(dataset, ratio=0.1)
 
         artifact_size = 20
-        window_size = 40
+        window_size = 20
 
         threshold_max, threshold_avg, threshold_avg_max = ExperimentorService.calibrate(training_set, window_size)
 
